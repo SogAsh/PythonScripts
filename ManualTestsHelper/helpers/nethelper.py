@@ -3,14 +3,17 @@ import json
 import pyperclip
 import random
 
+API_URL = "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/"
+
 def startSession():
     session = requests.session()
     session.auth = ('admin', 'psw')
+    session.headers['Accept'] = "application/json"
     return session
 
 def genToken(session: requests.Session, cashboxId):
     session.headers['Content-Type'] = "application/json"
-    url = f"https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/{cashboxId}/resetPassword"
+    url = API_URL + f"{cashboxId}/resetPassword"
     for i in range(10):
         token = str(random.randrange(11111111, 99999999))
         pyperclip.copy(f"{token}")
@@ -19,17 +22,14 @@ def genToken(session: requests.Session, cashboxId):
         if result.ok: break
 
 def getCashoxSettingsJson (session: requests.Session, cashboxId):
-    session.headers['Accept'] = "application/json"
-    response = session.get(f'https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/{cashboxId}/settings')
+    response = session.get(API_URL + f'{cashboxId}/settings')
     return json.loads(response.content)
 
 def postCashboxSettings(session: requests.Session, cashboxId, settings):
     session.headers['Content-Type'] = "application/json"
-    session.headers['Accept'] = "application/json"
-    url = f"https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/{cashboxId}/settings/backend"
-    session.post(url, data = json.dumps(settings))
+    session.post(API_URL + f"{cashboxId}/settings/backend", data = json.dumps(settings))
 
-def flipBoolSettings(settings, settingsName = "moveRemainsToNextShift", settingsType = "backendSettings"):
+def flipBoolSettings(settings, settingsName, settingsType = "backendSettings"):
     settings["settings"][settingsType][settingsName] = not settings["settings"][settingsType][settingsName]
     result = {}
     result["settings"] = settings["settings"][settingsType]
