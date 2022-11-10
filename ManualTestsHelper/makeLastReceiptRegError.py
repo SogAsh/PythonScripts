@@ -8,3 +8,4 @@ receipt["kkmRegistrationStatus"] = "Error"
 receipt["correctionReceiptId"] = None
 fileshelper.updateReceiptContent(con, json.dumps(receipt), id)
 con.close()
+fileshelper.startCashbox()
