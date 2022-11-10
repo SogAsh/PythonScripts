@@ -1,6 +1,5 @@
 pushd %~dp0
-pip install pyperclip
-pip install requests
+py -m pip install -r requirements.txt
 ini.py
 popd
 pause
