@@ -1,0 +1,5 @@
+CashboxHotkeys.exe
+__pycache__/*
+*.pyc
+*.bak
+data.json
