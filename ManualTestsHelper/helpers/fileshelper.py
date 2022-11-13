@@ -6,21 +6,25 @@ import sqlite3
 import time
 import uuid
 
-def getLastReceipt(con : sqlite3.Connection):
+def setDbConnection():
+    # closeSQLite()
+    return sqlite3.connect(os.path.join(findCashboxPath(), "db", "db.db"))
+
+def getLastReceipt(con : sqlite3.Connection, finalQuery = False):
     cur = con.cursor()
     cur.execute("select * from Receipt")
-    return cur.fetchall()[-1] #id, shiftid, number, content
+    result = cur.fetchall()[-1] #id, shiftid, number, content
+    if finalQuery:
+        con.close()
+    return result
 
-def updateReceiptContent(con : sqlite3.Connection, content, id):
+def updateReceiptContent(con : sqlite3.Connection, content, id, finalQuery = False):
     query = f"UPDATE Receipt SET Content = '{content}' WHERE Id == '{id}'"
     cur = con.cursor()
     cur.execute(query)
     con.commit()
-
-def setDbConnection():
-    stopCashbox()
-    closeSQLite()
-    return sqlite3.connect(os.path.join(findCashboxPath(), "db", "db.db"))
+    if finalQuery: 
+        con.close()
 
 def getCashboxId():
     con = setDbConnection()
@@ -33,17 +37,21 @@ def getCashboxId():
     writeJsonValue("cashboxId", cashboxId)
     return cashboxId
 
-def getLastShiftFromSQL(con : sqlite3.Connection):
+def getLastShiftFromDb(con : sqlite3.Connection, finalQuery = False):
     cur = con.cursor()
     cur.execute("SELECT Content FROM shift WHERE Number == (SELECT Max(Number) FROM shift)")
     shift = cur.fetchone()[0] 
+    if (finalQuery):
+        con.close()
     return shift
 
-def editShiftInDB(con : sqlite3.Connection, content : str):
+def editShiftInDB(con : sqlite3.Connection, content : str, finalQuery = False):
     cur = con.cursor()
     query = f"UPDATE shift SET Content = '{content}' WHERE Number == (SELECT MAX(Number) FROM shift)"
     cur.execute(query)
     con.commit()
+    if (finalQuery):
+        con.close()
 
 def closeSQLite(): 
     try:
@@ -53,9 +61,6 @@ def closeSQLite():
 
 def deleteFolder(filePath):
     assert os.path.isdir(filePath)
-    closeSQLite()
-    stopCashbox()
-    time.sleep(2)
     shutil.rmtree(filePath)
 
 def findCashboxPath():
@@ -86,26 +91,27 @@ def changeStagingInConfig(stagingNumber, configPath):
         data = json.loads(rawJson)
         if stagingNumber == 2:
             data["settings"][0]["loyaltyCashboxClientUrl"] = "https://market-dev.testkontur.ru/loyaltyCashboxApi"
+            data["settings"][0]["cashboxBackendUrl"] = "https://market.testkontur.ru"
+        elif stagingNumber == 9:
+            data["settings"][0]["loyaltyCashboxClientUrl"] = "https://market.kontur.ru/loyaltyCashboxApi"
+            data["settings"][0]["cashboxBackendUrl"] = "https://market.kontur.ru"
         else: 
             data["settings"][0]["loyaltyCashboxClientUrl"] = "https://market.testkontur.ru/loyaltyCashboxApi"
+            data["settings"][0]["cashboxBackendUrl"] = "https://market.testkontur.ru"
+
         newJson = json.dumps(data, indent=4)
         file.seek(0)
         file.write(newJson)
         file.truncate()   
 
-def stopCashbox():
+def changeCashboxServiceState(action):
+    waitTime = 1 if action == "stop" else 4
     try:
-        subprocess.call(['sc', 'stop', 'SKBKontur.Cashbox'])
-        time.sleep(1)
+        subprocess.call(['sc', f'{action}', 'SKBKontur.Cashbox'])
+        time.sleep(waitTime)
     except:
         pass
 
-def startCashbox():
-    try:
-        subprocess.call(['sc', 'start', 'SKBKontur.Cashbox'])
-        time.sleep(4)
-    except:
-        pass
 
 def findChildDirPath(path, dir):
     for root, dirs, files in os.walk(path):

@@ -11,10 +11,10 @@ def startSession():
     session.headers['Accept'] = "application/json"
     return session
 
-def genToken(session: requests.Session, cashboxId):
+def genToken(session: requests.Session, cashboxId, attemptsNumber):
     session.headers['Content-Type'] = "application/json"
     url = API_URL + f"{cashboxId}/resetPassword"
-    for i in range(10):
+    for i in range(attemptsNumber):
         token = str(random.randrange(11111111, 99999999))
         pyperclip.copy(f"{token}")
         data = json.dumps({"Token" : token})
