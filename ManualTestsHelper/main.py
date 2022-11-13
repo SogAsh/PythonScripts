@@ -55,9 +55,3 @@ match args.command:
             updateReceiptContent(con, json.dumps(receipt), id, True)
     case _: 
         print ("Неизвестная команда")
-
-
-
-# всегда получать cashboxId?
-
-
