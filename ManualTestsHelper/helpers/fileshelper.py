@@ -5,6 +5,10 @@ import subprocess
 import sqlite3
 import time
 import uuid
+import ctypes
+
+def printMsg(title, text, style = 0):
+    return ctypes.windll.user32.MessageBoxW(0, text, title, style)
 
 def setDbConnection():
     # closeSQLite()
