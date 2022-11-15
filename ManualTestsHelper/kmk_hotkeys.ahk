@@ -40,7 +40,11 @@ Run, kmk_scripts.py delete cashbox
 return
 
 !t::
-Run, kmk_scripts.py token 5
+Run, kmk_scripts.py gen token
+return
+
+!g::
+Run, kmk_scripts.py gen guid
 return
 
 !-::

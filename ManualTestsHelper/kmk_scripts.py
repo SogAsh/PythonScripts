@@ -1,10 +1,12 @@
 import argparse
 import pyperclip
 import os
+import uuid
 from helpers.fileshelper import * 
 from helpers.nethelper import *
 
-ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "token", "shift", "flip_settings", "receipt"]
+
+ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_settings", "receipt"]
 PROG_NAME = "kmk_scripts"
 
 def startParser():
@@ -26,11 +28,11 @@ match args.entity:
         if args.action == "paste":
             cashboxId = pyperclip.paste()
             writeJsonValue("cashboxId", cashboxId)
-            printMsg(PROG_NAME, f"Вы вставили из буфера в data.json cashboxId = {cashboxId}")
+            printMsg(PROG_NAME, f"Вы вставили из буфера в data.json cashboxId = \n{cashboxId}")
         elif args.action == "copy":
             cashboxId = getCashboxId()
             pyperclip.copy(cashboxId)
-            printMsg(PROG_NAME, f"В вашем буфере обмена — текущий cashboxId: {cashboxId}")
+            printMsg(PROG_NAME, f"В вашем буфере обмена — текущий cashboxId: \n{cashboxId}")
     case "delete":
         changeCashboxServiceState("stop")
         cashboxPath = findCashboxPath()
@@ -41,9 +43,15 @@ match args.entity:
             dbPath = os.path.join(cashboxPath, "db")
             deleteFolder(dbPath)
             printMsg(PROG_NAME, "Вы удалили БД кассы")
-    case "token":
-        genToken(startSession(), getCashboxId(), int(args.action))
-        printMsg(PROG_NAME, "Новый токен - в вашем буфере обмена")
+    case "gen":
+        if args.action == "token":
+            cashboxId = getCashboxId()
+            genToken(startSession(), cashboxId)
+            printMsg(PROG_NAME, f"В вашем буфере обмена - новый токен для кассы: \n{cashboxId}")
+        elif args.action == "guid":
+            guid = str(uuid.uuid4())
+            pyperclip.copy(guid)
+            printMsg(PROG_NAME, f"В вашем буфере - guid: \n{guid}")
     case "shift":
         if args.action == "set24":
             con = setDbConnection()
@@ -66,6 +74,6 @@ match args.entity:
             receipt["kkmRegistrationStatus"] = "Error"
             receipt["correctionReceiptId"] = None
             updateReceiptContent(con, json.dumps(receipt), id, True)
-            printMsg(PROG_NAME, f"Последний чек продажи стал незареганным. Он на сумму = {receipt['contributedSum']}") # дописать сумму
+            printMsg(PROG_NAME, f"Последний чек продажи стал незареганным. \nОн на сумму = {receipt['contributedSum']}")
     case _: 
         print ("Для команды не прописано действие")

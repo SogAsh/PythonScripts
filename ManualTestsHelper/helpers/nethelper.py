@@ -11,15 +11,17 @@ def startSession():
     session.headers['Accept'] = "application/json"
     return session
 
-def genToken(session: requests.Session, cashboxId, attemptsNumber):
+def genToken(session: requests.Session, cashboxId, attemptsNumber = 5):
     session.headers['Content-Type'] = "application/json"
     url = API_URL + f"{cashboxId}/resetPassword"
     for i in range(attemptsNumber):
         token = str(random.randrange(11111111, 99999999))
-        pyperclip.copy(f"{token}")
         data = json.dumps({"Token" : token})
         result = session.post(url, data = data)
-        if result.ok: break
+        print(f"Результат запроса {cashboxId}/resetPassword: {result}")
+        if result.ok: 
+            pyperclip.copy(f"{token}")
+            break
 
 def getCashoxSettingsJson (session: requests.Session, cashboxId):
     response = session.get(API_URL + f'{cashboxId}/settings')
