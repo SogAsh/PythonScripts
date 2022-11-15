@@ -36,11 +36,11 @@ match args.entity:
         cashboxPath = findCashboxPath()
         if args.action == "cashbox":
             deleteFolder(cashboxPath)
-            printMsg(PROG_NAME, "Вы удалили БД кассы")
+            printMsg(PROG_NAME, "Вы удалили кассу с ПК")
         elif args.action == "db":
             dbPath = os.path.join(cashboxPath, "db")
             deleteFolder(dbPath)
-            printMsg(PROG_NAME, "Вы удалили кассу с ПК")
+            printMsg(PROG_NAME, "Вы удалили БД кассы")
     case "token":
         genToken(startSession(), getCashboxId(), int(args.action))
         printMsg(PROG_NAME, "Новый токен - в вашем буфере обмена")
