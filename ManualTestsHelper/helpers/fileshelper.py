@@ -64,15 +64,16 @@ def closeSQLite():
         pass
 
 def deleteFolder(filePath):
-    assert os.path.isdir(filePath)
-    shutil.rmtree(filePath)
+    try:
+        shutil.rmtree(filePath)
+    except:
+        pass
 
 def findCashboxPath():
     for path in getProgramFilesPaths():
         dir = findChildDirPath(path, "SKBKontur")
         if dir != "":
             cashboxPath = os.path.join(path, "SKBKontur", "Cashbox")   
-    assert cashboxPath != "", "Can't find Cashbox. Try to add your Disk Drive names to data.json" 
     return cashboxPath
 
 def findConfigPath():
