@@ -8,7 +8,7 @@ import uuid
 import ctypes
 
 def printMsg(title, text, style = 0):
-    return ctypes.windll.user32.MessageBoxW(0, text, title, style)
+    ctypes.windll.user32.MessageBoxW(0, text, title, style)
 
 def setDbConnection():
     # closeSQLite()

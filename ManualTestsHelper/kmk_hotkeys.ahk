@@ -48,7 +48,7 @@ Run, kmk_scripts.py shift set24
 return
 
 !o::
-Run, kmk_scripts.py settings remains
+Run, kmk_scripts.py flip_settings moveRemainsToNextShift
 return
 
 !e::

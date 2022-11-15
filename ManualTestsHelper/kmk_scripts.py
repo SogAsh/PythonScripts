@@ -4,7 +4,7 @@ import os
 from helpers.fileshelper import * 
 from helpers.nethelper import *
 
-ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "token", "shift", "settings", "receipt"]
+ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "token", "shift", "flip_settings", "receipt"]
 PROG_NAME = "kmk_scripts"
 
 def startParser():
@@ -51,14 +51,13 @@ match args.entity:
             shift["openInfo"]["openDateTime"] = "2022-11-03 22:39:30.5000103"
             editShiftInDB(con, json.dumps(shift), True)
             printMsg(PROG_NAME, "Теперь текущая смена больше 24 часов")
-    case "settings":
-        if args.action == "remains":
-            cashboxId = getCashboxId()
-            session = startSession()
-            settings = getCashoxSettingsJson(session, cashboxId)
-            flippedSettings = flipBoolSettings(settings, "moveRemainsToNextShift")
-            postCashboxSettings(session, cashboxId, flippedSettings)
-            printMsg(PROG_NAME, f"Настройка переноса остатков теперь = {settings['settings']['backendSettings']['moveRemainsToNextShift']}")
+    case "flip_settings":
+        cashboxId = getCashboxId()
+        session = startSession()
+        settings = getCashoxSettingsJson(session, cashboxId)
+        flippedSettings = flipBoolSettings(settings, args.action)
+        postCashboxSettings(session, cashboxId, flippedSettings)
+        printMsg(PROG_NAME, f'Настройка {args.action} теперь = {settings["settings"]["backendSettings"][args.action]}')
     case "receipt":
         if args.action == "regError":
             con = setDbConnection()
@@ -70,4 +69,3 @@ match args.entity:
             printMsg(PROG_NAME, f"Последний чек продажи стал незареганным. Он на сумму = {receipt['contributedSum']}") # дописать сумму
     case _: 
         print ("Для команды не прописано действие")
-
