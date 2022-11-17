@@ -56,7 +56,7 @@ def get2terminal():
 
 
 def get2LE():
-    LE1 = {"legalEntityId": "e739e821-7b51-4a13-9c38-c8073c2ec644", "inn": "9966000000", "kpp": "", "name": "Юрлицо"}
+    LE1 = {"legalEntityId": "e739e821-7b51-4a13-9c38-c8073c2ec644", "inn": "6699000000", "kpp": "", "name": "Юрлицо"}
     LE2 = {"legalEntityId": "d4ab40fe-cf40-4a5f-8636-32a1efbd66af", "inn": "992570272700","kpp": "", "name": "ИП"}
     return {"legalEntities" : [LE1, LE2]}
 
