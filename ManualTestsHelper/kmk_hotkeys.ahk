@@ -74,10 +74,10 @@ return
 
 
 
-:*:adm1::https://market.testkontur.ru/AdminTools
+::adm1::https://market.testkontur.ru/AdminTools
 
-:*:adm2::https://market-dev.testkontur.ru/AdminTools
+::adm2::https://market-dev.testkontur.ru/AdminTools
 
-:*:cashdoc::https://cashdoc.kontur/webdav/cashbox/
+::cashdoc::https://cashdoc.kontur/webdav/cashbox/
 
-:*:csadm::https://market.testkontur.ru/cashboxApi/admin/web/cashbox/
+::csadm::https://market.testkontur.ru/cashboxApi/admin/web/cashbox/
