@@ -91,6 +91,8 @@ match args.entity:
             kkt1 = "None"
             kkt2 = "None"
         prepSettingsFor2UL(startSession(), getCashboxId(), kkt1, kkt2)
+        changeCashboxServiceState("stop")
+        changeCashboxServiceState("start")
         printMsg(PROG_NAME, f"Вы переключили кассу в режим 2ЮЛ\nККТ: {kkt1} и {kkt2}")
     case _: 
         print ("Для команды не прописано действие")
