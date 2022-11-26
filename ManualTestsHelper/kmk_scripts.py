@@ -75,7 +75,7 @@ match args.entity:
             updateReceiptContent(con, json.dumps(receipt), id, True)
             printMsg(PROG_NAME, f"Последний чек продажи стал незареганным. \nОн на сумму = {receipt['contributedSum']}")
     case "setKkt":
-        KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
+        kkt = ["None", "Atol", "VikiPrint", "Shtrih"]
         print("""Какие ККТ выбрать в настройках? Введите один или два номера: 
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
         \nНапример, чтобы включить режим 2ЮЛ с Атолом и Штрихом, введите: 1 3""")
@@ -87,7 +87,7 @@ match args.entity:
             # вызывать prepForOneUl - там делать один терминал, одну ККТ, одну LE
             # getCashoxSettingsJson(startSession(), getCashboxId(), False)
         else:
-            prepSettingsFor2UL(startSession(), getCashboxId(), KKT[kktNumbers[0]], KKT[kktNumbers[1]])
-            printMsg(PROG_NAME, f"Вы переключили кассу в режим 2ЮЛ\nККТ: {KKT[kktNumbers[0]]} и {KKT[kktNumbers[1]]}")
+            prepSettingsFor2UL(startSession(), getCashboxId(), kkt[kktNumbers[0]], kkt[kktNumbers[1]])
+            printMsg(PROG_NAME, f"Вы переключили кассу в режим 2ЮЛ\nККТ: {kkt[kktNumbers[0]]} и {kkt[kktNumbers[1]]}")
     case _: 
         print ("Для команды не прописано действие")
