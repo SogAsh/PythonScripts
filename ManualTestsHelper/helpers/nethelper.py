@@ -25,9 +25,10 @@ def genToken(session: requests.Session, cashboxId, attemptsNumber = 5):
             pyperclip.copy(f"{token}")
             break
 
-def prepSettingsFor2UL(session, cashboxId, kkt1, kkt2):
+def prepSettingsFor2UL(session, cashboxId, kkt: list, pos: list):
     settings = getCashoxSettingsJson(session, cashboxId)
     legalEntities = getLE(settings)
+    # заменить le на массив
     le1 = legalEntities[0]["legalEntityId"]
     le2 = legalEntities[1]["legalEntityId"]
 
@@ -35,8 +36,8 @@ def prepSettingsFor2UL(session, cashboxId, kkt1, kkt2):
     backendSettings = {"settings" : settings["settings"]["backendSettings"]}
     backendSettings["previousVersion"] = settings["versions"]["backendVersion"]
 
-    settings["settings"]["appSettings"]["hardwareSettings"]["kkmSettings"] = getKkm([kkt1,kkt2], [le1, le2])
-    settings["settings"]["appSettings"]["hardwareSettings"]["cardTerminalSettings"] = get2terminal()
+    settings["settings"]["appSettings"]["hardwareSettings"]["kkmSettings"] = getKkm(kkt, [le1, le2])
+    settings["settings"]["appSettings"]["hardwareSettings"]["cardTerminalSettings"] = getTerminal(pos, [le1, le2])
     appSettings = {"settings" : settings["settings"]["appSettings"]}
     appSettings["previousVersion"] = settings["versions"]["appVersion"]
 
@@ -58,19 +59,11 @@ def getKkm(kkt: list, le: list):
         result.append({"kkmProtocol": f"{kkt[i]}", "allowOfdTransportConfiguration": True, "legalEntityId": le[i]})
     return result
 
-# def get2terminal(kkt: list, le: list):
-#     result = []
-#     for i in range(len(kkt)):
-#         result.append({"kkmProtocol": f"{kkt[i]}", "allowOfdTransportConfiguration": True, "legalEntityId": le[i]})
-#     return result
-
-def get2terminal():
-    terminal1 = {"cardTerminalProtocol": "none", "legalEntityId": "e739e821-7b51-4a13-9c38-c8073c2ec644","merchantId": None}
-    terminal2 = {"cardTerminalProtocol": "none", "legalEntityId": "d4ab40fe-cf40-4a5f-8636-32a1efbd66af", "merchantId": None}
-    return [terminal1, terminal2]
-
-
-
+def getTerminal(pos: list, le: list):
+    result = []
+    for i in range(len(pos)):
+        result.append({"cardTerminalProtocol": pos[i], "legalEntityId": le[i],"merchantId": None})
+    return result
 
 
 def getCashoxSettingsJson (session: requests.Session, cashboxId):
