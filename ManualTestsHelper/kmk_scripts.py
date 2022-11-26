@@ -85,7 +85,7 @@ match args.entity:
         elif kktNumbers.count == 1:
             pass
             # вызывать prepForOneUl - там делать один терминал, одну ККТ, одну LE
-            # getCashoxSettingsJson(startSession(), getCashboxId(), False)
+            # getCashoxSettingsJson(startSession(), getCashboxId())
         else:
             prepSettingsFor2UL(startSession(), getCashboxId(), kkt[kktNumbers[0]], kkt[kktNumbers[1]])
             printMsg(PROG_NAME, f"Вы переключили кассу в режим 2ЮЛ\nККТ: {kkt[kktNumbers[0]]} и {kkt[kktNumbers[1]]}")

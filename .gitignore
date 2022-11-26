@@ -1,5 +1,7 @@
 CashboxHotkeys.exe
 __pycache__/*
+.vscode__/
 *.pyc
 *.bak
+launch.json
 data.json

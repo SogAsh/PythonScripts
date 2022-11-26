@@ -27,37 +27,48 @@ def genToken(session: requests.Session, cashboxId, attemptsNumber = 5):
 
 def prepSettingsFor2UL(session, cashboxId, kkt1, kkt2):
     settings = getCashoxSettingsJson(session, cashboxId)
+    legalEntities = getLE(settings)
+    le1 = legalEntities[0]["legalEntityId"]
+    le2 = legalEntities[1]["legalEntityId"]
 
-    backendSettings = {}
-    backendSettings["settings"] = settings["settings"]["backendSettings"]
+    settings["settings"]["backendSettings"]["legalEntities"] = legalEntities
+    backendSettings = {"settings" : settings["settings"]["backendSettings"]}
     backendSettings["previousVersion"] = settings["versions"]["backendVersion"]
-    backendSettings["settings"]["legalEntities"] = get2LE()["legalEntities"]
 
-    appSettings = {}
-    appSettings["settings"] = settings["settings"]["appSettings"]
+    settings["settings"]["appSettings"]["hardwareSettings"]["kkmSettings"] = getKkm([kkt1,kkt2], [le1, le2])
+    settings["settings"]["appSettings"]["hardwareSettings"]["cardTerminalSettings"] = get2terminal()
+    appSettings = {"settings" : settings["settings"]["appSettings"]}
     appSettings["previousVersion"] = settings["versions"]["appVersion"]
-    appSettings["settings"]["hardwareSettings"]["kkmSettings"] = get2Kkm(kkt1,kkt2)["kkmSettings"]
-    appSettings["settings"]["hardwareSettings"]["cardTerminalSettings"] = get2terminal()["cardTerminalSettings"]
 
     postCashboxSettings(session, cashboxId, backendSettings, True)
     postCashboxSettings(session, cashboxId, appSettings, False)
 
+def getLE(settings, twoLE = True):
+    legalEntities = list(settings["settings"]["backendSettings"]["legalEntities"])
+    if (twoLE and len(legalEntities) == 1):
+        legalEntities.append({"legalEntityId": "d4ab40fe-cf40-4a5f-8636-32a1efbd66af", "inn": "992570272700","kpp": "", "name": "ИП"})
+    legalEntities[0]["inn"] = "6699000000"
+    if (len(legalEntities) == 2):
+        legalEntities[1]["inn"] = "992570272700"
+    return legalEntities
 
-def get2Kkm(kkt1, kkt2):
-    kkm1 = {"kkmProtocol": f"{kkt1}", "allowOfdTransportConfiguration": True, "legalEntityId": "e739e821-7b51-4a13-9c38-c8073c2ec644"}
-    kkm2 = {"kkmProtocol": f"{kkt2}","allowOfdTransportConfiguration": True, "legalEntityId": "d4ab40fe-cf40-4a5f-8636-32a1efbd66af"}
-    return {"kkmSettings" : [kkm1, kkm2]}
+def getKkm(kkt: list, le: list):
+    result = []
+    for i in range(len(kkt)):
+        result.append({"kkmProtocol": f"{kkt[i]}", "allowOfdTransportConfiguration": True, "legalEntityId": le[i]})
+    return result
+
+# def get2terminal(kkt: list, le: list):
+#     result = []
+#     for i in range(len(kkt)):
+#         result.append({"kkmProtocol": f"{kkt[i]}", "allowOfdTransportConfiguration": True, "legalEntityId": le[i]})
+#     return result
 
 def get2terminal():
     terminal1 = {"cardTerminalProtocol": "none", "legalEntityId": "e739e821-7b51-4a13-9c38-c8073c2ec644","merchantId": None}
     terminal2 = {"cardTerminalProtocol": "none", "legalEntityId": "d4ab40fe-cf40-4a5f-8636-32a1efbd66af", "merchantId": None}
-    return {"cardTerminalSettings" : [terminal1, terminal2]}
+    return [terminal1, terminal2]
 
-
-def get2LE():
-    LE1 = {"legalEntityId": "e739e821-7b51-4a13-9c38-c8073c2ec644", "inn": "6699000000", "kpp": "", "name": "Юрлицо"}
-    LE2 = {"legalEntityId": "d4ab40fe-cf40-4a5f-8636-32a1efbd66af", "inn": "992570272700","kpp": "", "name": "ИП"}
-    return {"legalEntities" : [LE1, LE2]}
 
 
 
