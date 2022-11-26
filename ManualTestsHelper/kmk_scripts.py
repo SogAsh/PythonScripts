@@ -7,6 +7,8 @@ from helpers.nethelper import *
 
 ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_settings", "receipt", "setKkt"]
 PROG_NAME = "kmk_scripts"
+KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
+POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
 
 def startParser():
     parser = argparse.ArgumentParser(description="Manage SKBKontur.Cashbox service, change data in local DB and in remote Cashbox Server", prog = PROG_NAME)
@@ -75,14 +77,12 @@ match args.entity:
             updateReceiptContent(con, json.dumps(receipt), id, True)
             printMsg(PROG_NAME, f"Последний чек продажи стал незареганным. \nОн на сумму = {receipt['contributedSum']}")
     case "setKkt":
-        KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
-        POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
         print("""Какие ККТ выбрать в настройках? Введите один или два номера через пробел: 
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
         \nНапример, чтобы включить режим 2ЮЛ с Атолом и Штрихом, введите: 1 3\n""")
         kktNumbers = list(map(int, input().strip().split()))
-        print("""Какие выбрать терминалы? Введите один или два номера через пробел: 
-        \n0. None \n1. External \n2. Inpas\n3. Ingenico \n4. Sberbank""")
+        print("""\nКакие выбрать терминалы? Введите один или два номера через пробел: 
+        \n0. None \n1. External \n2. Inpas\n3. Ingenico \n4. Sberbank\n""")
         posNumbers = list(map(int, input().strip().split()))
         if kktNumbers.count == 0:
             printMsg(PROG_NAME, "Вы не написали названия ККТ")
