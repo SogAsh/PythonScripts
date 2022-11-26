@@ -28,16 +28,16 @@ def genToken(session: requests.Session, cashboxId, attemptsNumber = 5):
 def prepSettingsFor2UL(session, cashboxId, kkt: list, pos: list):
     settings = getCashoxSettingsJson(session, cashboxId)
     legalEntities = getLE(settings)
-    # заменить le на массив
-    le1 = legalEntities[0]["legalEntityId"]
-    le2 = legalEntities[1]["legalEntityId"]
+    le = []
+    for i in range (len(legalEntities)):
+        le.append(legalEntities[i]["legalEntityId"])
 
     settings["settings"]["backendSettings"]["legalEntities"] = legalEntities
     backendSettings = {"settings" : settings["settings"]["backendSettings"]}
     backendSettings["previousVersion"] = settings["versions"]["backendVersion"]
 
-    settings["settings"]["appSettings"]["hardwareSettings"]["kkmSettings"] = getKkm(kkt, [le1, le2])
-    settings["settings"]["appSettings"]["hardwareSettings"]["cardTerminalSettings"] = getTerminal(pos, [le1, le2])
+    settings["settings"]["appSettings"]["hardwareSettings"]["kkmSettings"] = getKkm(kkt, le)
+    settings["settings"]["appSettings"]["hardwareSettings"]["cardTerminalSettings"] = getTerminal(pos, le)
     appSettings = {"settings" : settings["settings"]["appSettings"]}
     appSettings["previousVersion"] = settings["versions"]["appVersion"]
 
