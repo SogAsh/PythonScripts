@@ -25,7 +25,6 @@ def genToken(session: requests.Session, cashboxId, attemptsNumber = 5):
             pyperclip.copy(f"{token}")
             break
 
-
 def prepSettingsFor2UL(session, cashboxId, kkt1, kkt2):
     settings = getCashoxSettingsJson(session, cashboxId, False)
 

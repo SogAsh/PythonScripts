@@ -5,8 +5,7 @@ import uuid
 from helpers.fileshelper import * 
 from helpers.nethelper import *
 
-
-ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_settings", "receipt", "set2LE"]
+ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_settings", "receipt", "setKkt"]
 PROG_NAME = "kmk_scripts"
 
 def startParser():
@@ -75,22 +74,15 @@ match args.entity:
             receipt["correctionReceiptId"] = None
             updateReceiptContent(con, json.dumps(receipt), id, True)
             printMsg(PROG_NAME, f"Последний чек продажи стал незареганным. \nОн на сумму = {receipt['contributedSum']}")
-    case "set2LE":
-        kkt1 = ""
-        kkt2 = ""
-        if args.action == "sasha":
-            kkt1 = "Atol"
-            kkt2 = "Atol"
-        elif args.action == "slava":
-            kkt1 = "VikiPrint"
-            kkt2 = "Atol"
-        elif args.action == "misha":
-            kkt1 = "VikiPrint"
-            kkt2 = "Shtrih"
-        elif args.action == "none":
-            kkt1 = "None"
-            kkt2 = "None"
-        prepSettingsFor2UL(startSession(), getCashboxId(), kkt1, kkt2)
-        printMsg(PROG_NAME, f"Вы переключили кассу в режим 2ЮЛ\nККТ: {kkt1} и {kkt2}")
+    case "setKkt":
+        print("enter your kkt names with space in between. \nFor example: VikiPrint Shtrih")
+        kktNames = input().split()
+        if kktNames.count == 0:
+            printMsg(PROG_NAME, "Вы не написали названия ККТ")
+        elif kktNames.count == 1:
+            pass
+        else:
+            prepSettingsFor2UL(startSession(), getCashboxId(), kktNames[0], kktNames[1])
+            printMsg(PROG_NAME, f"Вы переключили кассу в режим 2ЮЛ\nККТ: {kktNames[0]} и {kktNames[1]}")
     case _: 
         print ("Для команды не прописано действие")

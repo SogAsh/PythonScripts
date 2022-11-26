@@ -3,16 +3,8 @@
 SendMode Input  
 SetWorkingDir %A_ScriptDir%
 
-!4::
-Run, python kmk_scripts.py set2LE sasha
-return
-
-!5::
-Run, python kmk_scripts.py set2LE slava
-return
-
-!6::
-Run, python kmk_scripts.py set2LE misha
+!k::
+Run, python kmk_scripts.py setKkt true
 return
 
 
