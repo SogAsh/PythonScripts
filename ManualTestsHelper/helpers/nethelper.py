@@ -26,7 +26,7 @@ def genToken(session: requests.Session, cashboxId, attemptsNumber = 5):
             break
 
 def prepSettingsFor2UL(session, cashboxId, kkt1, kkt2):
-    settings = getCashoxSettingsJson(session, cashboxId, False)
+    settings = getCashoxSettingsJson(session, cashboxId)
 
     backendSettings = {}
     backendSettings["settings"] = settings["settings"]["backendSettings"]
@@ -39,8 +39,8 @@ def prepSettingsFor2UL(session, cashboxId, kkt1, kkt2):
     appSettings["settings"]["hardwareSettings"]["kkmSettings"] = get2Kkm(kkt1,kkt2)["kkmSettings"]
     appSettings["settings"]["hardwareSettings"]["cardTerminalSettings"] = get2terminal()["cardTerminalSettings"]
 
-    postCashboxSettings(session, cashboxId, backendSettings, True, False)
-    postCashboxSettings(session, cashboxId, appSettings, False, False)
+    postCashboxSettings(session, cashboxId, backendSettings, True)
+    postCashboxSettings(session, cashboxId, appSettings, False)
 
 
 def get2Kkm(kkt1, kkt2):
@@ -62,16 +62,14 @@ def get2LE():
 
 
 
-def getCashoxSettingsJson (session: requests.Session, cashboxId, V1 = True):
-    url = API_URL if V1 else V2_API_URL
-    response = session.get(url + f'{cashboxId}/settings')
+def getCashoxSettingsJson (session: requests.Session, cashboxId):
+    response = session.get(V2_API_URL + f'{cashboxId}/settings')
     return json.loads(response.content)
 
-def postCashboxSettings(session: requests.Session, cashboxId, settings, backend = True, V1 = True):
-    url = API_URL if V1 else V2_API_URL
+def postCashboxSettings(session: requests.Session, cashboxId, settings, backend = True):
     settingsType = "backend" if backend else "app"
     session.headers['Content-Type'] = "application/json"
-    result = session.post(url + f"{cashboxId}/settings/" + f"{settingsType}", data = json.dumps(settings))
+    result = session.post(V2_API_URL + f"{cashboxId}/settings/" + f"{settingsType}", data = json.dumps(settings))
     print(result)
 
 def flipBoolSettings(settings, settingsName, settingsType = "backendSettings"):
