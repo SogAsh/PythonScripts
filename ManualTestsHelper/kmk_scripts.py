@@ -77,19 +77,15 @@ match args.entity:
     case "setKkt":
         KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
         POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
-        print("""Какие ККТ выбрать в настройках? Введите один или два номера: 
+        print("""Какие ККТ выбрать в настройках? Введите один или два номера через пробел: 
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
-        \nНапример, чтобы включить режим 2ЮЛ с Атолом и Штрихом, введите: 1 3""")
+        \nНапример, чтобы включить режим 2ЮЛ с Атолом и Штрихом, введите: 1 3\n""")
         kktNumbers = list(map(int, input().strip().split()))
-        print("""Какие выбрать терминалы? Введите один или два номера: 
+        print("""Какие выбрать терминалы? Введите один или два номера через пробел: 
         \n0. None \n1. External \n2. Inpas\n3. Ingenico \n4. Sberbank""")
         posNumbers = list(map(int, input().strip().split()))
         if kktNumbers.count == 0:
             printMsg(PROG_NAME, "Вы не написали названия ККТ")
-        elif kktNumbers.count == 1:
-            pass
-            # вызывать prepForOneUl - там делать один терминал, одну ККТ, одну LE
-            # getCashoxSettingsJson(startSession(), getCashboxId())
         else:
             kkt = []
             pos = []
@@ -97,7 +93,7 @@ match args.entity:
                 kkt.append(KKT[kktNumbers[i]])
                 pos.append(POS[posNumbers[i]])
 
-            prepSettingsFor2UL(startSession(), getCashboxId(), kkt, pos)
+            setKktAndPos(startSession(), getCashboxId(), kkt, pos)
             printMsg(PROG_NAME, f"Ваши ККТ: {', '.join(kkt) }\nВаши терминалы: {', '.join(pos)}")
     case _: 
         print ("Для команды не прописано действие")

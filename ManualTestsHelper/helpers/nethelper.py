@@ -25,9 +25,9 @@ def genToken(session: requests.Session, cashboxId, attemptsNumber = 5):
             pyperclip.copy(f"{token}")
             break
 
-def prepSettingsFor2UL(session, cashboxId, kkt: list, pos: list):
+def setKktAndPos(session, cashboxId, kkt: list, pos: list):
     settings = getCashoxSettingsJson(session, cashboxId)
-    legalEntities = getLE(settings)
+    legalEntities = getLE(settings, len(kkt) == 2)
     le = []
     for i in range (len(legalEntities)):
         le.append(legalEntities[i]["legalEntityId"])
@@ -44,10 +44,12 @@ def prepSettingsFor2UL(session, cashboxId, kkt: list, pos: list):
     postCashboxSettings(session, cashboxId, backendSettings, True)
     postCashboxSettings(session, cashboxId, appSettings, False)
 
-def getLE(settings, twoLE = True):
+def getLE(settings, twoLE : bool):
     legalEntities = list(settings["settings"]["backendSettings"]["legalEntities"])
     if (twoLE and len(legalEntities) == 1):
         legalEntities.append({"legalEntityId": "d4ab40fe-cf40-4a5f-8636-32a1efbd66af", "inn": "992570272700","kpp": "", "name": "ИП"})
+    if (not twoLE):
+        legalEntities = [legalEntities[0]]
     legalEntities[0]["inn"] = "6699000000"
     if (len(legalEntities) == 2):
         legalEntities[1]["inn"] = "992570272700"
