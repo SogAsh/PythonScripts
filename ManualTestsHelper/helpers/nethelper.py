@@ -43,6 +43,8 @@ def setKktAndPos(session, cashboxId, kkt: list, pos: list):
 
     postCashboxSettings(session, cashboxId, backendSettings, True)
     postCashboxSettings(session, cashboxId, appSettings, False)
+    return le
+
 
 def getLE(settings, twoLE : bool):
     legalEntities = list(settings["settings"]["backendSettings"]["legalEntities"])

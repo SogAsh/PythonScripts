@@ -92,8 +92,9 @@ match args.entity:
             for i in range (len(kktNumbers)):
                 kkt.append(KKT[kktNumbers[i]])
                 pos.append(POS[posNumbers[i]])
-
-            setKktAndPos(startSession(), getCashboxId(), kkt, pos)
+            cashboxId = getCashboxId()
+            le = setKktAndPos(startSession(), cashboxId, kkt, pos)
+            setLeInProducts(le, True)
             printMsg(PROG_NAME, f"Ваши ККТ: {', '.join(kkt) }\nВаши терминалы: {', '.join(pos)}")
     case _: 
         print ("Для команды не прописано действие")

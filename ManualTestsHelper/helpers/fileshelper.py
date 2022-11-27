@@ -14,9 +14,29 @@ def setDbConnection():
     # closeSQLite()
     return sqlite3.connect(os.path.join(findCashboxPath(), "db", "db.db"))
 
+
+def setLeInProducts(le, finalQuery = False):
+    con = setDbConnection()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM Product")
+    products = cur.fetchall()
+    for row in products:
+        product = json.loads(row[2])
+        product["legalEntityId"] = le[0]
+        cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {row[0]}")
+    if (len(le) > 1):
+        product = json.loads(products[0][2])
+        product["legalEntityId"] = le[1]
+        print(f"Название товара для второго ЮЛ: {product['name']}")
+        cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {products[0][0]}")
+    con.commit()
+    if finalQuery:
+        con.close()
+
+
 def getLastReceipt(con : sqlite3.Connection, finalQuery = False):
     cur = con.cursor()
-    cur.execute("select * from Receipt")
+    cur.execute("SELECT * FROM Receipt")
     result = cur.fetchall()[-1] #id, shiftid, number, content
     if finalQuery:
         con.close()
@@ -67,7 +87,7 @@ def deleteFolder(filePath):
     try:
         shutil.rmtree(filePath)
     except:
-        pass
+        printMsg("Ошибка", f"Не удалось удалить папку с адресом:\n{filePath}")
 
 def findCashboxPath():
     for path in getProgramFilesPaths():
@@ -115,7 +135,7 @@ def changeCashboxServiceState(action):
         subprocess.call(['sc', f'{action}', 'SKBKontur.Cashbox'])
         time.sleep(waitTime)
     except:
-        pass
+        printMsg("Ошибка", f"Не удалось перевести службу в состояние:\n{action}")
 
 
 def findChildDirPath(path, dir):
