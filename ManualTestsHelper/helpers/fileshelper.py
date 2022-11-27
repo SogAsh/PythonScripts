@@ -25,14 +25,21 @@ def setLeInProducts(le, finalQuery = False):
         product["legalEntityId"] = le[0]
         cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {row[0]}")
     if (len(le) > 1):
-        product = json.loads(products[0][2])
-        product["legalEntityId"] = le[1]
-        print(f"Название товара для второго ЮЛ: {product['name']}")
-        cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {products[0][0]}")
+        noProductsFor2UL = True
+        for row in products:
+            product = json.loads(row[2])
+            if ("_2ЮЛ" in product["name"]):
+                product["legalEntityId"] = le[1]
+                cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {row[0]}")
+                noProductsFor2UL = False
+        if (noProductsFor2UL):
+            product = json.loads(products[0][2])
+            product["legalEntityId"] = le[1]
+            print(f"Название товара для второго ЮЛ: {product['name']}")
+            cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {products[0][0]}")
     con.commit()
     if finalQuery:
         con.close()
-
 
 def getLastReceipt(con : sqlite3.Connection, finalQuery = False):
     cur = con.cursor()
