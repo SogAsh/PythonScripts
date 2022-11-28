@@ -142,7 +142,7 @@ def changeCashboxServiceState(action):
         subprocess.call(['sc', f'{action}', 'SKBKontur.Cashbox'])
         time.sleep(waitTime)
     except:
-        printMsg("Ошибка", f"Не удалось перевести службу в состояние:\n{action}")
+        print(f"Не удалось перевести службу в состояние:\n{action}")
 
 
 def findChildDirPath(path, dir):
