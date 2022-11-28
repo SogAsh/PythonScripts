@@ -22,6 +22,7 @@ def updateProductsWithPattern(cur : sqlite3.Cursor, products, legalEntityId, pro
         if (productNamePattern in product["name"]): 
             product["legalEntityId"] = legalEntityId 
             cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {row[0]}") 
+            print(product["name"])
             noProductsSet = False 
     return noProductsSet
 
