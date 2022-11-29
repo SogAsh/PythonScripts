@@ -15,14 +15,15 @@ def setDbConnection():
     return sqlite3.connect(os.path.join(findCashboxPath(), "db", "db.db"))
 
 
-def updateProductsWithPattern(cur : sqlite3.Cursor, products, legalEntityId, productNamePattern= ""): 
+def updateProductsWithPattern(cur : sqlite3.Cursor, products, legalEntityId, productNamePattern= "", printName = False): 
     noProductsSet = True 
     for row in products: 
         product = json.loads(row[2]) 
         if (productNamePattern in product["name"]): 
             product["legalEntityId"] = legalEntityId 
             cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {row[0]}") 
-            print(product["name"])
+            if (printName):
+                print(product["name"])
             noProductsSet = False 
     return noProductsSet
 
@@ -34,9 +35,9 @@ def setLeInProducts(le, finalQuery = False):
     products = cur.fetchall()
     updateProductsWithPattern(cur, products, le[0], "")
     if (len(le) > 1):
-        noProductsFor2UL = updateProductsWithPattern(cur, products, le[1], "_2ЮЛ")
+        noProductsFor2UL = updateProductsWithPattern(cur, products, le[1], "_2ЮЛ", True)
         if (noProductsFor2UL):
-            updateProductsWithPattern(cur, [products[0]], le[1], "")
+            updateProductsWithPattern(cur, [products[0]], le[1], "", True)
     con.commit()
     if finalQuery:
         con.close()
