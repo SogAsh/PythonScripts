@@ -124,7 +124,7 @@ def changeStagingInConfig(stagingNumber, configPath):
         data = json.loads(rawJson)
         if stagingNumber == 2:
             data["settings"][0]["loyaltyCashboxClientUrl"] = "https://market-dev.testkontur.ru/loyaltyCashboxApi"
-            data["settings"][0]["cashboxBackendUrl"] = "https://market.testkontur.ru"
+            data["settings"][0]["cashboxBackendUrl"] = "https://market-dev.testkontur.ru"
         elif stagingNumber == 9:
             data["settings"][0]["loyaltyCashboxClientUrl"] = "https://market.kontur.ru/loyaltyCashboxApi"
             data["settings"][0]["cashboxBackendUrl"] = "https://market.kontur.ru"
