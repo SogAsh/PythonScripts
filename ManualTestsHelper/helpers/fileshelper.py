@@ -115,8 +115,10 @@ def findConfigPath():
     return configPath
 
 def setStaging(stagingNumber):
+    changeCashboxServiceState("stop")
     configPath = findConfigPath()
     changeStagingInConfig(stagingNumber, configPath)
+    changeCashboxServiceState("start")
 
 def changeStagingInConfig(stagingNumber, configPath):
     with open(configPath, "r+") as file:
