@@ -95,7 +95,7 @@ def deleteFolder(filePath):
     try:
         shutil.rmtree(filePath)
     except:
-        printMsg("Ошибка", f"Не удалось удалить папку с адресом:\n{filePath}")
+        print(f"Не удалось удалить папку с адресом:\n{filePath}")
 
 def findCashboxPath():
     for path in getProgramFilesPaths():
