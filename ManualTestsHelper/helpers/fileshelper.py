@@ -147,7 +147,6 @@ def changeCashboxServiceState(action):
     except:
         print(f"Не удалось перевести службу в состояние:\n{action}")
 
-
 def findChildDirPath(path, dir):
     for root, dirs, files in os.walk(path):
         if (dir in dirs):
