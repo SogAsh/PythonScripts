@@ -92,6 +92,7 @@ def closeSQLite():
         pass
 
 def deleteFolder(filePath):
+    closeSQLite()
     try:
         shutil.rmtree(filePath)
     except:
