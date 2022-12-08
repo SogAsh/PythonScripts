@@ -21,10 +21,13 @@ def updateProductsWithPattern(cur : sqlite3.Cursor, products, legalEntityId, pro
         product = json.loads(row[2]) 
         if (productNamePattern in product["name"]): 
             product["legalEntityId"] = legalEntityId 
-            cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {row[0]}") 
-            if (printName):
-                print(product["name"])
-            noProductsSet = False 
+            try:
+                cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {row[0]}") 
+                if (printName):
+                    print(product["name"])
+                noProductsSet = False 
+            except:
+                pass
     return noProductsSet
 
 
@@ -33,12 +36,13 @@ def setLeInProducts(le, finalQuery = False):
     cur = con.cursor()
     cur.execute("SELECT * FROM Product")
     products = cur.fetchall()
-    updateProductsWithPattern(cur, products, le[0], "")
-    if (len(le) > 1):
-        noProductsFor2UL = updateProductsWithPattern(cur, products, le[1], "_2ЮЛ", True)
-        if (noProductsFor2UL):
-            updateProductsWithPattern(cur, [products[0]], le[1], "", True)
-    con.commit()
+    if len(products) != 0:
+        updateProductsWithPattern(cur, products, le[0], "")
+        if (len(le) > 1):
+            noProductsFor2UL = updateProductsWithPattern(cur, products, le[1], "_2ЮЛ", True)
+            if (noProductsFor2UL):
+                updateProductsWithPattern(cur, [products[0]], le[1], "", True)
+        con.commit()
     if finalQuery:
         con.close()
 
