@@ -4,8 +4,8 @@ import pyperclip
 import random
 import time
 
-API_URL = "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/"
-V2_API_URL = "https://market.testkontur.ru:443/cashboxApi/backend/v2/cashbox/"
+V1_URL_TAIL = ":443/cashboxApi/backend/v1/cashbox/"
+V2_URL_TAIL = ":443/cashboxApi/backend/v2/cashbox/"
 
 def startSession():
     session = requests.session()
@@ -13,9 +13,9 @@ def startSession():
     session.headers['Accept'] = "application/json"
     return session
 
-def genToken(session: requests.Session, cashboxId, attemptsNumber = 5):
+def genToken(session: requests.Session, cashboxId, backendUrl, attemptsNumber = 5):
     session.headers['Content-Type'] = "application/json"
-    url = API_URL + f"{cashboxId}/resetPassword"
+    url = backendUrl + V1_URL_TAIL + f"{cashboxId}/resetPassword"
     for i in range(attemptsNumber):
         token = str(random.randrange(11111111, 99999999))
         data = json.dumps({"Token" : token})
@@ -25,8 +25,8 @@ def genToken(session: requests.Session, cashboxId, attemptsNumber = 5):
             pyperclip.copy(f"{token}")
             break
 
-def setKktAndPos(session, cashboxId, kkt: list, pos: list):
-    settings = getCashoxSettingsJson(session, cashboxId)
+def setKktAndPos(session, cashboxId, kkt: list, pos: list, backendUrl):
+    settings = getCashoxSettingsJson(session, cashboxId, backendUrl)
     legalEntities = getLE(settings, len(kkt) == 2)
     le = []
     for i in range (len(legalEntities)):
@@ -41,10 +41,9 @@ def setKktAndPos(session, cashboxId, kkt: list, pos: list):
     appSettings = {"settings" : settings["settings"]["appSettings"]}
     appSettings["previousVersion"] = settings["versions"]["appVersion"]
 
-    postCashboxSettings(session, cashboxId, backendSettings, True)
-    postCashboxSettings(session, cashboxId, appSettings, False)
+    postCashboxSettings(session, cashboxId, backendSettings, backendUrl, True)
+    postCashboxSettings(session, cashboxId, appSettings, backendUrl, False)
     return le
-
 
 def getLE(settings, twoLE : bool):
     legalEntities = list(settings["settings"]["backendSettings"]["legalEntities"])
@@ -69,15 +68,14 @@ def getTerminal(pos: list, le: list):
         result.append({"cardTerminalProtocol": pos[i], "legalEntityId": le[i],"merchantId": None})
     return result
 
-
-def getCashoxSettingsJson (session: requests.Session, cashboxId):
-    response = session.get(V2_API_URL + f'{cashboxId}/settings')
+def getCashoxSettingsJson (session: requests.Session, cashboxId, backendUrl):
+    response = session.get(backendUrl + V2_URL_TAIL + f'{cashboxId}/settings')
     return json.loads(response.content)
 
-def postCashboxSettings(session: requests.Session, cashboxId, settings, backend = True):
+def postCashboxSettings(session: requests.Session, cashboxId, settings, backendUrl, backend = True):
     settingsType = "backend" if backend else "app"
     session.headers['Content-Type'] = "application/json"
-    result = session.post(V2_API_URL + f"{cashboxId}/settings/" + f"{settingsType}", data = json.dumps(settings))
+    result = session.post(backendUrl + V2_URL_TAIL + f"{cashboxId}/settings/" + f"{settingsType}", data = json.dumps(settings))
     print(result)
 
 def flipBoolSettings(settings, settingsName, settingsType = "backendSettings"):
@@ -87,6 +85,7 @@ def flipBoolSettings(settings, settingsName, settingsType = "backendSettings"):
     result["previousVersion"] = settings["versions"]["backendVersion"]
     return result
 
-def getSavedCashboxName(session: requests.Session, cashboxId):
-    backendSettings = getCashoxSettingsJson(session, cashboxId)['settings']['backendSettings']
+# не используется
+def getSavedCashboxName(session: requests.Session, cashboxId, backendUrl):
+    backendSettings = getCashoxSettingsJson(session, cashboxId, backendUrl)['settings']['backendSettings']
     return f"shop: {backendSettings['shopName']}, cashbox: {backendSettings['cashboxName']}"

@@ -24,7 +24,7 @@ def updateProductsWithPattern(cur : sqlite3.Cursor, products, legalEntityId, pro
             try:
                 cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {row[0]}") 
                 if (printName):
-                    print(product["name"])
+                    print("Название товара для второго ЮЛ: " + product["name"])
                 noProductsSet = False 
             except:
                 pass
@@ -125,6 +125,11 @@ def setStaging(stagingNumber):
     changeStagingInConfig(stagingNumber, configPath)
     changeCashboxServiceState("start")
 
+def getBackendUrlFromConfig(configPath):
+    with open(configPath, "r") as file:
+        rawJson = file.read()
+        return json.loads(rawJson)["settings"][0]["cashboxBackendUrl"]
+
 def changeStagingInConfig(stagingNumber, configPath):
     with open(configPath, "r+") as file:
         rawJson = file.read()
@@ -144,6 +149,7 @@ def changeStagingInConfig(stagingNumber, configPath):
         file.write(newJson)
         file.truncate()   
 
+# Заменить на turnOnCashboxService и TurnOffCashboxService
 def changeCashboxServiceState(action):
     waitTime = 1 if action == "stop" else 4
     try:

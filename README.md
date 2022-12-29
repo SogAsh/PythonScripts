@@ -40,16 +40,19 @@ ManualTestsHelper - скрипты, которые автоматизируют 
 
 Изменение настроек происходит на КС, поэтому после выполнения команды надо синхронизироваться.
 
-Также работает автозамена строк. Просто напишите ключ где угодно, например, в строке браузера, — и поставьте завершающий символ, например, точку. 
+Также работает автозамена строк. Просто напишите ключ где угодно, например, в строке браузера, — и поставьте завершающий символ, например, нажмите Enter. 
 Подставится значение:
 
 :white_check_mark: adm1 - https://market.testkontur.ru/AdminTools
 
 :white_check_mark: adm2 - https://market-dev.testkontur.ru/AdminTools
 
-:white_check_mark: cashdoc - https://cashdoc.kontur/webdav/cashbox/
+:white_check_mark: csadm1 - https://market.testkontur.ru/cashboxApi/admin/web/cashbox/
 
-:white_check_mark: csadm - https://market.kontur.ru/cashboxApi/admin/web/cashbox/
+:white_check_mark: csadm2 - https://market-dev.testkontur.ru/cashboxApi/admin/web/cashbox/
+
+:white_check_mark: csdoc - https://developer.kontur.ru/
+
 
 ____
 

@@ -70,6 +70,8 @@ return
 
 ::adm2::https://market-dev.testkontur.ru/AdminTools
 
-::cashdoc::https://cashdoc.kontur/webdav/cashbox/
+::csadm1::https://market.testkontur.ru/cashboxApi/admin/web/cashbox/
 
-::csadm::https://market.testkontur.ru/cashboxApi/admin/web/cashbox/
+::csadm2::https://market-dev.testkontur.ru/cashboxApi/admin/web/cashbox/
+
+::csdoc::https://developer.kontur.ru/

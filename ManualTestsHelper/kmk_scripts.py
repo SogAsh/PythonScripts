@@ -47,7 +47,8 @@ match args.entity:
     case "gen":
         if args.action == "token":
             cashboxId = getCashboxId()
-            genToken(startSession(), cashboxId)
+            backendUrl = getBackendUrlFromConfig(findConfigPath())
+            genToken(startSession(), cashboxId, backendUrl)
             printMsg(PROG_NAME, f"В вашем буфере обмена - новый токен для кассы: \n{cashboxId}")
         elif args.action == "guid":
             guid = str(uuid.uuid4())
@@ -60,13 +61,6 @@ match args.entity:
             shift["openInfo"]["openDateTime"] = "2022-11-03 22:39:30.5000103"
             editShiftInDB(con, json.dumps(shift), True)
             printMsg(PROG_NAME, "Теперь текущая смена больше 24 часов")
-    case "flip_settings":
-        cashboxId = getCashboxId()
-        session = startSession()
-        settings = getCashoxSettingsJson(session, cashboxId)
-        flippedSettings = flipBoolSettings(settings, args.action)
-        postCashboxSettings(session, cashboxId, flippedSettings)
-        printMsg(PROG_NAME, f'Настройка {args.action} теперь = {settings["settings"]["backendSettings"][args.action]}')
     case "receipt":
         if args.action == "regError":
             con = setDbConnection()
@@ -76,25 +70,36 @@ match args.entity:
             receipt["correctionReceiptId"] = None
             updateReceiptContent(con, json.dumps(receipt), id, True)
             printMsg(PROG_NAME, f"Последний чек продажи стал незареганным. \nОн на сумму = {receipt['contributedSum']}")
+    case "flip_settings":
+        cashboxId = getCashboxId()
+        session = startSession()
+        backendUrl = getBackendUrlFromConfig(findConfigPath())
+        settings = getCashoxSettingsJson(session, cashboxId, backendUrl)
+        flippedSettings = flipBoolSettings(settings, args.action)
+        postCashboxSettings(session, cashboxId, flippedSettings, backendUrl)
+        printMsg(PROG_NAME, f'Настройка {args.action} теперь = {settings["settings"]["backendSettings"][args.action]}')
     case "setKkt":
-        print("""Какие ККТ выбрать в настройках? Введите один или два номера через пробел: 
+        print("""Выберите 1 или 2 ККТ: первая для ЮЛ с ИНН = 6699000000, вторая - для ЮЛ с ИНН = 992570272700
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
-        \nНапример, чтобы включить режим 2ЮЛ с Атолом и Штрихом, введите: 1 3\n""")
+        \nНапример, если ввели "1" - Атол в режиме 1 ЮЛ, если "2 3" - Вики и Штрих в режиме 2ЮЛ\n""")
         kktNumbers = list(map(int, input().strip().split()))
-        print("""\nКакие выбрать терминалы? Введите один или два номера через пробел: 
+        print("""\nВыберите 1 или 2 терминала: 
         \n0. None \n1. External \n2. Inpas\n3. Ingenico \n4. Sberbank\n""")
         posNumbers = list(map(int, input().strip().split()))
         if kktNumbers.count == 0:
-            printMsg(PROG_NAME, "Вы не написали названия ККТ")
+            printMsg(PROG_NAME, "Вы не написали названия ККТ. Запустите скрипт снова")
         else:
+            changeCashboxServiceState("stop")
             kkt = []
             pos = []
             for i in range (len(kktNumbers)):
                 kkt.append(KKT[kktNumbers[i]])
                 pos.append(POS[posNumbers[i]])
             cashboxId = getCashboxId()
-            le = setKktAndPos(startSession(), cashboxId, kkt, pos)
+            backendUrl = getBackendUrlFromConfig(findConfigPath())
+            le = setKktAndPos(startSession(), cashboxId, kkt, pos, backendUrl)
             setLeInProducts(le, True)
+            changeCashboxServiceState("start")
             printMsg(PROG_NAME, f"Ваши ККТ: {', '.join(kkt) }\nВаши терминалы: {', '.join(pos)}")
     case _: 
         print ("Для команды не прописано действие")
