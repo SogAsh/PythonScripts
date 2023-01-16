@@ -5,7 +5,7 @@ import uuid
 from helpers.fileshelper import * 
 from helpers.nethelper import *
 
-ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_settings", "receipt", "setKkt"]
+ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_settings", "receipt", "setKkt", "scanner"]
 PROG_NAME = "kmk_scripts"
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
@@ -101,5 +101,7 @@ match args.entity:
             setLeInProducts(le, True)
             changeCashboxServiceState("start")
             printMsg(PROG_NAME, f"Ваши ККТ: {', '.join(kkt) }\nВаши терминалы: {', '.join(pos)}")
+    case "scanner":
+        pasteMark150Symbols()
     case _: 
         print ("Для команды не прописано действие")

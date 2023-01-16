@@ -3,6 +3,10 @@
 SendMode Input  
 SetWorkingDir %A_ScriptDir%
 
+!s::
+Run, python kmk_scripts.py scanner true
+return
+
 !k::
 Run, python kmk_scripts.py setKkt true
 return

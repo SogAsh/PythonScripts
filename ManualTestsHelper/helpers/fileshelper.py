@@ -6,14 +6,25 @@ import sqlite3
 import time
 import uuid
 import ctypes
+import keyboard
+import pyperclip
 
 def printMsg(title, text, style = 0):
     ctypes.windll.user32.MessageBoxW(0, text, title, style)
 
+def pasteMark150Symbols():
+    keyboard.press_and_release("alt + tab")
+    mark = pyperclip.paste()
+    if mark == None or len(mark) != 150:
+        mark = "01121192496090HKMVWR6PP160TEMVENQYEJXW13PUDZUCB0TNP7LUPBG444DKNMKZCYOYMPTT1CCP7TPSLZ671W923SSWP57QFU0CCV1ZESSDYQXAFLYOGCXFPMUTXW3W5LACSDGQY6S94V3DVHH4"
+    time.sleep(1)
+    for i in range(150):
+        keyboard.write(mark[i])
+        time.sleep(0.01)
+
 def setDbConnection():
     # closeSQLite()
     return sqlite3.connect(os.path.join(findCashboxPath(), "db", "db.db"))
-
 
 def updateProductsWithPattern(cur : sqlite3.Cursor, products, legalEntityId, productNamePattern= "", printName = False): 
     noProductsSet = True 
