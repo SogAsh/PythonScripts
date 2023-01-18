@@ -9,6 +9,7 @@ ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_set
 PROG_NAME = "kmk_scripts"
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
+MARKTYPES = ["Excise"]
 
 def startParser():
     parser = argparse.ArgumentParser(description="Manage SKBKontur.Cashbox service, change data in local DB and in remote Cashbox Server", prog = PROG_NAME)
@@ -102,6 +103,16 @@ match args.entity:
             changeCashboxServiceState("start")
             printMsg(PROG_NAME, f"Ваши ККТ: {', '.join(kkt) }\nВаши терминалы: {', '.join(pos)}")
     case "scanner":
-        pasteMark150Symbols()
+        if args.action == "quiet":
+            pasteMarkLikeByScanner("", False, True)
+        else:
+            print("Какую марку вставить? Введите число: \n \n 0. Из буфера \n 1. Акцизную")
+            number = int(input().strip())
+            if number == 0:
+                pasteMarkLikeByScanner("", True, False)
+            else: 
+                pasteMarkLikeByScanner(MARKTYPES[number - 1], False, False)
     case _: 
         print ("Для команды не прописано действие")
+
+   

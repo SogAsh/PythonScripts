@@ -8,28 +8,35 @@ import uuid
 import ctypes
 import keyboard
 import pyperclip
+import random
 
 def printMsg(title, text, style = 0):
     ctypes.windll.user32.MessageBoxW(0, text, title, style)
 
-def pasteMark150Symbols():
+
+
+def getMarkFromFile(productType):
+    path = os.path.join("helpers", "marks", productType + ".txt")
+    with open(path, "r") as file:
+        lines = file.readlines()
+        return lines[random.randrange(len(lines))].strip()
+
+def pasteMarkLikeByScanner(productType, bufferMode: bool, quietMode: bool):
     keyboard.press_and_release("alt + tab")
-    mark = pyperclip.paste()
-    if mark == None or len(mark) != 150:
-        try:
-            mark = readJsonValue("exciseMark")
-        except:
-            mark = "01121192496090HKMVWR6PP160TEMVENQYEJXW13PUDZUCB0TNP7LUPBG444DKNMKZCYOYMPTT1CCP7TPSLZ671W923SSWP57QFU0CCV1ZESSDYQXAFLYOGCXFPMUTXW3W5LACSDGQY6S94V3DVHH4"
-            writeJsonValue("exciseMark", mark)
-    else:
-        writeJsonValue("exciseMark", mark)
     time.sleep(1)
+    mark = ""
+    if quietMode:
+        mark = readJsonValue("lastMark")
+    elif bufferMode:
+        mark = pyperclip.paste()
+    else: 
+        mark = getMarkFromFile(productType)
+    writeJsonValue("lastMark", mark)
     for i in range(150):
         keyboard.write(mark[i])
         time.sleep(0.01)
 
 def setDbConnection():
-    # closeSQLite()
     return sqlite3.connect(os.path.join(findCashboxPath(), "db", "db.db"))
 
 def updateProductsWithPattern(cur : sqlite3.Cursor, products, legalEntityId, productNamePattern= "", printName = False): 
@@ -188,6 +195,7 @@ def getProgramFilesPaths():
         paths.append(os.path.join(diskDrive, "Program Files"))
         paths.append(os.path.join(diskDrive, "Program Files (x86)"))
     return paths
+
 
 def writeJsonValue(key, value, path = os.path.join("helpers", "data.json")):
     with open(path, "r+") as file:

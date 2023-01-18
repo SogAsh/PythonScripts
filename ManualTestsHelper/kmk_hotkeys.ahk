@@ -1,16 +1,20 @@
 ﻿#NoEnv  
 #Warn  
+#MenuMaskKey vkE8
 SendMode Input  
 SetWorkingDir %A_ScriptDir%
 
 !s::
-Run, python kmk_scripts.py scanner true
+Run, python kmk_scripts.py scanner console
+return
+
+!+s::
+Run, python kmk_scripts.py scanner quiet
 return
 
 !k::
-Run, python kmk_scripts.py setKkt true
+Run, python kmk_scripts.py setKkt console
 return
-
 
 !1::
 Run, python kmk_scripts.py stage 1
