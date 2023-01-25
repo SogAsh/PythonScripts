@@ -52,6 +52,10 @@ return
 Run, python kmk_scripts.py delete cashbox
 return
 
+!+c::
+Run, python kmk_scripts.py delete cashbox_and_db
+return
+
 !t::
 Run, python kmk_scripts.py gen token
 return

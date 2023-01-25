@@ -39,12 +39,16 @@ match args.entity:
         changeCashboxServiceState("stop")
         cashboxPath = findCashboxPath()
         if args.action == "cashbox":
-            deleteFolder(cashboxPath)
-            printMsg(PROG_NAME, "Вы удалили кассу с ПК")
+            binPath = os.path.join(cashboxPath, "bin")
+            deleteFolder(binPath)
+            printMsg(PROG_NAME, "Вы удалили КМК, но оставили БД")
         elif args.action == "db":
             dbPath = os.path.join(cashboxPath, "db")
             deleteFolder(dbPath)
             printMsg(PROG_NAME, "Вы удалили БД кассы")
+        elif args.action == "cashbox_and_db":
+            deleteFolder(cashboxPath)
+            printMsg(PROG_NAME, "Вы удалили КМК и БД")
     case "gen":
         if args.action == "token":
             cashboxId = getCashboxId()
