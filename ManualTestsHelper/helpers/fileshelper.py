@@ -9,11 +9,33 @@ import ctypes
 import keyboard
 import pyperclip
 import random
+import string
+
+ALPHABET80 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"%&'*+-./_,:;=<>?"
 
 def printMsg(title, text, style = 0):
     ctypes.windll.user32.MessageBoxW(0, text, title, style)
 
+def generateRandomString(length):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(length))
 
+def getPriceIn80System(price): 
+    symbolNumbers = [] 
+    while(True): 
+        delet = price // 80 
+        ost = price % 80 
+        price = delet 
+        symbolNumbers.append(ost) 
+        if (delet == 0):  
+            break 
+    leadingZeros = 4 - len(symbolNumbers)
+    for x in range(leadingZeros):
+        symbolNumbers.append(0)
+    res = "" 
+    for number in range(len(symbolNumbers) - 1, -1, -1): 
+        res += ALPHABET80[symbolNumbers[number]] 
+    return res
 
 def getMarkFromFile(productType):
     path = os.path.join("helpers", "marks", productType + ".txt")
@@ -22,17 +44,26 @@ def getMarkFromFile(productType):
         return lines[random.randrange(len(lines))].strip()
 
 def pasteMarkLikeByScanner(productType, bufferMode: bool, quietMode: bool):
-    keyboard.press_and_release("alt + tab")
-    time.sleep(1)
     mark = ""
     if quietMode:
         mark = readJsonValue("lastMark")
     elif bufferMode:
         mark = pyperclip.paste()
-    else: 
-        mark = getMarkFromFile(productType)
+    else:  
+        if productType == "Tabak": 
+            print("Какой нужен МРЦ в копейках?") 
+            price = int(input().strip()) 
+            barcode = "2100000000463"
+            mark = "0" + barcode + "-UWzSA8" + getPriceIn80System(price) + generateRandomString(5)
+        elif productType == "Cis":
+            barcode = "2100000000463"
+            mark = "010" + barcode + "21" + generateRandomString(29) 
+        else:  
+            mark = getMarkFromFile(productType) 
     writeJsonValue("lastMark", mark)
-    for i in range(150):
+    keyboard.press_and_release("alt + tab")
+    time.sleep(1)
+    for i in range(len(mark)):
         keyboard.write(mark[i])
         time.sleep(0.01)
 
