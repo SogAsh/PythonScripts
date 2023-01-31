@@ -23,14 +23,12 @@ def generateRandomString(length):
 def getPriceIn80System(price): 
     symbolNumbers = [] 
     while(True): 
-        delet = price // 80 
-        ost = price % 80 
-        price = delet 
-        symbolNumbers.append(ost) 
-        if (delet == 0):  
+        symbolNumbers.append(price % 80 ) 
+        price = price // 80  
+        if (price == 0):  
             break 
     leadingZeros = 4 - len(symbolNumbers)
-    for x in range(leadingZeros):
+    for _ in range(leadingZeros):
         symbolNumbers.append(0)
     res = "" 
     for number in range(len(symbolNumbers) - 1, -1, -1): 
