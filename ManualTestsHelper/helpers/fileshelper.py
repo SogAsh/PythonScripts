@@ -55,7 +55,7 @@ def pasteMarkLikeByScanner(productType, bufferMode: bool, quietMode: bool):
             mark = "0" + barcode + "-UWzSA8" + getPriceIn80System(price) + generateRandomString(5)
         elif productType == "Cis":
             barcode = "2100000000463"
-            mark = "010" + barcode + "21" + generateRandomString(29) 
+            mark = "010" + barcode + "21" + generateRandomString(14) 
         else:  
             mark = getMarkFromFile(productType) 
     writeJsonValue("lastMark", mark)
