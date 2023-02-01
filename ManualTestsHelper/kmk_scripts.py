@@ -110,7 +110,7 @@ match args.entity:
         if args.action == "quiet":
             pasteMarkLikeByScanner("", False, True)
         else:
-            print("Какую марку вставить? Введите число: \n \n 0. Из буфера \n 1. Акцизную \n 2. Сигарет \n 3. Шин, духов, одежды, обуви, фотооборудования")
+            print("Какую марку вставить? Введите число: \n \n 0. Из буфера \n 1. Акцизную \n 2. Сигарет \n 3. Шин, духов, одежды, обуви, фото, воды")
             number = int(input().strip())
             if number == 0:
                 pasteMarkLikeByScanner("", True, False)

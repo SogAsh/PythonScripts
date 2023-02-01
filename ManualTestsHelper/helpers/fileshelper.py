@@ -63,7 +63,7 @@ def pasteMarkLikeByScanner(productType, bufferMode: bool, quietMode: bool):
                 barcode = readJsonValue("barcode") 
             except: 
                 barcode = "2100000000463"
-            mark = "010" + barcode + "21" + generateRandomString(29) 
+            mark = "010" + barcode + "21" + generateRandomString(13) + "93" +  generateRandomString(13)
         else:  
             mark = getMarkFromFile(productType) 
     writeJsonValue("lastMark", mark)
