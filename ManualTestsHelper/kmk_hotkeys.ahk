@@ -72,6 +72,10 @@ return
 Run, python kmk_scripts.py flip_settings moveRemainsToNextShift
 return
 
+!a::
+Run, python kmk_scripts.py flip_settings prepaidEnabled
+return
+
 !e::
 Run, python kmk_scripts.py receipt regError
 return
