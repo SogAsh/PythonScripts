@@ -9,7 +9,7 @@ ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_set
 PROG_NAME = "kmk_scripts"
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
-MARKTYPES = ["Excise", "Tabak", "Cis"]
+MARKTYPES = ["Excise", "Tabak", "Cis", "Milk"]
 
 def startParser():
     parser = argparse.ArgumentParser(description="Manage SKBKontur.Cashbox service, change data in local DB and in remote Cashbox Server", prog = PROG_NAME)
@@ -110,7 +110,7 @@ match args.entity:
         if args.action == "quiet":
             pasteMarkLikeByScanner("", False, True)
         else:
-            print("Какую марку вставить? Введите число: \n \n 0. Из буфера \n 1. Акцизную \n 2. Сигарет \n 3. Шин, духов, одежды, обуви, фото, воды")
+            print("Какую марку вставить? Введите число: \n \n 0. Из буфера \n 1. Акцизную \n 2. Сигарет \n 3. Шин, духов, одежды, обуви, фото, воды \n 4. Молока")
             number = int(input().strip())
             if number == 0:
                 pasteMarkLikeByScanner("", True, False)

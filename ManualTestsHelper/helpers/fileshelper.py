@@ -48,22 +48,19 @@ def pasteMarkLikeByScanner(productType, bufferMode: bool, quietMode: bool):
     elif bufferMode:
         mark = pyperclip.paste()
     else:  
+        barcode = ""
+        try:
+            barcode = readJsonValue("barcode") 
+        except: 
+            barcode = "2100000000463"
         if productType == "Tabak": 
             print("Какой нужен МРЦ в копейках?") 
             price = int(input().strip()) 
-            barcode = ""
-            try:
-                barcode = readJsonValue("barcode") 
-            except: 
-                barcode = "2100000000463"
             mark = "0" + barcode + "-UWzSA8" + getPriceIn80System(price) + generateRandomString(5)
         elif productType == "Cis":
-            barcode = ""
-            try:
-                barcode = readJsonValue("barcode") 
-            except: 
-                barcode = "2100000000463"
             mark = "010" + barcode + "21" + generateRandomString(13) + "93" +  generateRandomString(13)
+        elif productType == "Milk":
+            mark = "010" + barcode + "21" + generateRandomString(8) + "93" + generateRandomString(4)
         else:  
             mark = getMarkFromFile(productType) 
     writeJsonValue("lastMark", mark)
