@@ -1,8 +1,8 @@
-import requests
 import json
-import pyperclip
 import random
 import time
+import pyperclip
+import requests
 
 V1_URL_TAIL = ":443/cashboxApi/backend/v1/cashbox/"
 V2_URL_TAIL = ":443/cashboxApi/backend/v2/cashbox/"

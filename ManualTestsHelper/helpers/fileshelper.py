@@ -36,7 +36,7 @@ def getPriceIn80System(price):
     return res
 
 def getMarkFromFile(productType):
-    path = os.path.join("helpers", "marks", productType + ".txt")
+    path = os.path.join("ManualTestsHelper", "helpers", "marks", productType + ".txt")
     with open(path, "r") as file:
         lines = file.readlines()
         return lines[random.randrange(len(lines))].strip()
@@ -178,10 +178,10 @@ def findConfigPath():
     return configPath
 
 def setStaging(stagingNumber):
-    changeCashboxServiceState("stop")
+    changeCashboxServiceState(True)
     configPath = findConfigPath()
     changeStagingInConfig(stagingNumber, configPath)
-    changeCashboxServiceState("start")
+    changeCashboxServiceState(False)
 
 def getBackendUrlFromConfig(configPath):
     with open(configPath, "r") as file:
@@ -207,14 +207,13 @@ def changeStagingInConfig(stagingNumber, configPath):
         file.write(newJson)
         file.truncate()   
 
-# Заменить на turnOnCashboxService и TurnOffCashboxService
-def changeCashboxServiceState(action):
-    waitTime = 1 if action == "stop" else 4
+def changeCashboxServiceState(shouldStop):
     try:
-        subprocess.call(['sc', f'{action}', 'SKBKontur.Cashbox'])
-        time.sleep(waitTime)
+        subprocess.call(['sc', f'{"stop" if shouldStop else "start"}', 'SKBKontur.Cashbox'])
+        time.sleep(1 if shouldStop else 4)
+        return True
     except:
-        print(f"Не удалось перевести службу в состояние:\n{action}")
+        return False
 
 def findChildDirPath(path, dir):
     for root, dirs, files in os.walk(path):
@@ -230,8 +229,7 @@ def getProgramFilesPaths():
         paths.append(os.path.join(diskDrive, "Program Files (x86)"))
     return paths
 
-
-def writeJsonValue(key, value, path = os.path.join("helpers", "data.json")):
+def writeJsonValue(key, value, path = os.path.join("ManualTestsHelper", "helpers", "data.json")):
     with open(path, "r+") as file:
         rawJson = file.read()
         data = json.loads(rawJson)
@@ -241,7 +239,7 @@ def writeJsonValue(key, value, path = os.path.join("helpers", "data.json")):
         file.write(newJson)
         file.truncate()
 
-def readJsonValue(key, path = os.path.join("helpers", "data.json")):
+def readJsonValue(key, path = os.path.join("ManualTestsHelper", "helpers", "data.json")):
     with open(path, "r") as file:
         rawJson = file.read()
         data = json.loads(rawJson)
