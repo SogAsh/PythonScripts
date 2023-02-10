@@ -36,7 +36,7 @@ def getPriceIn80System(price):
     return res
 
 def getMarkFromFile(productType):
-    path = os.path.join("ManualTestsHelper", "helpers", "marks", productType + ".txt")
+    path = os.path.join("marks", productType + ".txt")
     with open(path, "r") as file:
         lines = file.readlines()
         return lines[random.randrange(len(lines))].strip()
@@ -229,7 +229,7 @@ def getProgramFilesPaths():
         paths.append(os.path.join(diskDrive, "Program Files (x86)"))
     return paths
 
-def writeJsonValue(key, value, path = os.path.join("ManualTestsHelper", "helpers", "data.json")):
+def writeJsonValue(key, value, path = os.path.join("data.json")):
     with open(path, "r+") as file:
         rawJson = file.read()
         data = json.loads(rawJson)
@@ -239,7 +239,7 @@ def writeJsonValue(key, value, path = os.path.join("ManualTestsHelper", "helpers
         file.write(newJson)
         file.truncate()
 
-def readJsonValue(key, path = os.path.join("ManualTestsHelper", "helpers", "data.json")):
+def readJsonValue(key, path = os.path.join("data.json")):
     with open(path, "r") as file:
         rawJson = file.read()
         data = json.loads(rawJson)

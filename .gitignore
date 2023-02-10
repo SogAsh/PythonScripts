@@ -1,4 +1,5 @@
 kmk_hotkeys.exe
+venv/
 __pycache__/*
 .vscode__/
 *.pyc

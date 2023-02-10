@@ -1,12 +1,14 @@
 import argparse
 import logging
 import os
+import sys
+import ctypes
 import uuid
 from helpers.fileshelper import * 
 from helpers.nethelper import *
 import pyperclip
 import keyboard
-
+  
 ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_settings", "receipt", "setKkt", "scanner"]
 PROG_NAME = "kmk_scripts"
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
@@ -112,7 +114,8 @@ def useScanner(mode = "normal"):
         else: 
             pasteMarkLikeByScanner(MARKTYPES[number - 1], False, False)
 
-if __name__ == '__main__':
+# @main_requires_admin(return_output=True)
+def main():
     print("Скрипты запущены, горячие клавиши уже работают")
     keyboard.add_hotkey("alt+shift+down", lambda: ruleService(True))
     keyboard.add_hotkey("alt+shift+up", lambda: ruleService(False))
@@ -138,6 +141,7 @@ if __name__ == '__main__':
     keyboard.add_abbreviation('csadm1', 'https://market.testkontur.ru/cashboxApi/admin/web/cashbox/')
     keyboard.add_abbreviation('csadm2', 'https://market-dev.testkontur.ru/cashboxApi/admin/web/cashbox/')
     keyboard.add_abbreviation('apidoc', 'https://developer.kontur.ru/')
-    keyboard.wait()
+    keyboard.wait('alt+esc')
 
-
+if __name__ == "__main__":
+    main()
