@@ -31,7 +31,7 @@ def encode_price_for_mark(price):
     return res
 
 def get_mark_from_file(productType):
-    path = os.path.join("marks", productType + ".txt")
+    path = os.path.join(os.path.dirname(__file__), "marks", productType + ".txt")
     with open(path, "r") as file:
         lines = file.readlines()
         return lines[random.randrange(len(lines))].strip()
