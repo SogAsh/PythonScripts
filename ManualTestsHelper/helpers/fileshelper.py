@@ -4,8 +4,6 @@ import json
 import subprocess 
 import sqlite3
 import time
-import uuid
-import ctypes
 import keyboard
 import pyperclip
 import random
@@ -13,14 +11,11 @@ import string
 
 ALPHABET80 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"%&'*+-./_,:;=<>?"
 
-def printMsg(title, text, style = 0):
-    ctypes.windll.user32.MessageBoxW(0, text, title, style)
-
-def generateRandomString(length):
+def gen_random_string(length):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(length))
 
-def getPriceIn80System(price): 
+def encode_price_for_mark(price): 
     symbolNumbers = [] 
     while(True): 
         symbolNumbers.append(price % 80 ) 
@@ -35,45 +30,45 @@ def getPriceIn80System(price):
         res += ALPHABET80[symbolNumbers[number]] 
     return res
 
-def getMarkFromFile(productType):
+def get_mark_from_file(productType):
     path = os.path.join("marks", productType + ".txt")
     with open(path, "r") as file:
         lines = file.readlines()
         return lines[random.randrange(len(lines))].strip()
 
-def pasteMarkLikeByScanner(productType, bufferMode: bool, quietMode: bool):
+def paste_mark_in_scanner_mode(productType, bufferMode: bool, quietMode: bool):
     mark = ""
     if quietMode:
-        mark = readJsonValue("lastMark")
+        mark = get_from_local_json("lastMark")
     elif bufferMode:
         mark = pyperclip.paste()
     else:  
         barcode = ""
         try:
-            barcode = readJsonValue("barcode") 
+            barcode = get_from_local_json("barcode") 
         except: 
             barcode = "2100000000463"
         if productType == "Tabak": 
             print("Какой нужен МРЦ в копейках?") 
             price = int(input().strip()) 
-            mark = "0" + barcode + "-UWzSA8" + getPriceIn80System(price) + generateRandomString(5)
+            mark = "0" + barcode + "-UWzSA8" + encode_price_for_mark(price) + gen_random_string(5)
         elif productType == "Cis":
-            mark = "010" + barcode + "21" + generateRandomString(13) + "93" +  generateRandomString(13)
+            mark = "010" + barcode + "21" + gen_random_string(13) + "93" +  gen_random_string(13)
         elif productType == "Milk":
-            mark = "010" + barcode + "21" + generateRandomString(8) + "93" + generateRandomString(4)
+            mark = "010" + barcode + "21" + gen_random_string(8) + "93" + gen_random_string(4)
         else:  
-            mark = getMarkFromFile(productType) 
-    writeJsonValue("lastMark", mark)
+            mark = get_mark_from_file(productType) 
+    cache_in_local_json("lastMark", mark)
     keyboard.press_and_release("alt + tab")
     time.sleep(1)
     for i in range(len(mark)):
         keyboard.write(mark[i])
         time.sleep(0.01)
 
-def setDbConnection():
-    return sqlite3.connect(os.path.join(findCashboxPath(), "db", "db.db"))
+def set_db_connection():
+    return sqlite3.connect(os.path.join(find_cashbox_path(), "db", "db.db"))
 
-def updateProductsWithPattern(cur : sqlite3.Cursor, products, legalEntityId, productNamePattern= "", printName = False): 
+def update_products_with_pattern(cur : sqlite3.Cursor, products, legalEntityId, productNamePattern="", printName = False): 
     noProductsSet = True 
     for row in products: 
         product = json.loads(row[2]) 
@@ -88,23 +83,22 @@ def updateProductsWithPattern(cur : sqlite3.Cursor, products, legalEntityId, pro
                 pass
     return noProductsSet
 
-
-def setLeInProducts(le, finalQuery = False):
-    con = setDbConnection()
+def set_legalentityid_in_products(le, finalQuery = False):
+    con = set_db_connection()
     cur = con.cursor()
     cur.execute("SELECT * FROM Product")
     products = cur.fetchall()
     if len(products) != 0:
-        updateProductsWithPattern(cur, products, le[0], "")
+        update_products_with_pattern(cur, products, le[0], "")
         if (len(le) > 1):
-            noProductsFor2UL = updateProductsWithPattern(cur, products, le[1], "_2ЮЛ", True)
+            noProductsFor2UL = update_products_with_pattern(cur, products, le[1], "_2ЮЛ", True)
             if (noProductsFor2UL):
-                updateProductsWithPattern(cur, [products[0]], le[1], "", True)
+                update_products_with_pattern(cur, [products[0]], le[1], "", True)
         con.commit()
     if finalQuery:
         con.close()
 
-def getLastReceipt(con : sqlite3.Connection, finalQuery = False):
+def get_last_receipt(con : sqlite3.Connection, finalQuery = False):
     cur = con.cursor()
     cur.execute("SELECT * FROM Receipt")
     result = cur.fetchall()[-1] #id, shiftid, number, content
@@ -112,7 +106,7 @@ def getLastReceipt(con : sqlite3.Connection, finalQuery = False):
         con.close()
     return result
 
-def updateReceiptContent(con : sqlite3.Connection, content, id, finalQuery = False):
+def update_receipt_content(con : sqlite3.Connection, content, id, finalQuery = False):
     query = f"UPDATE Receipt SET Content = '{content}' WHERE Id == '{id}'"
     cur = con.cursor()
     cur.execute(query)
@@ -120,18 +114,18 @@ def updateReceiptContent(con : sqlite3.Connection, content, id, finalQuery = Fal
     if finalQuery: 
         con.close()
 
-def getCashboxId():
-    con = setDbConnection()
+def get_cashbox_id():
+    con = set_db_connection()
     cur = con.cursor()
     cur.execute("select * FROM CashboxState")
     cashboxId = cur.fetchall()[0][1]
     con.close()
     if cashboxId == None: 
-        return readJsonValue("cashboxId")
-    writeJsonValue("cashboxId", cashboxId)
+        return get_from_local_json("cashboxId")
+    cache_in_local_json("cashboxId", cashboxId)
     return cashboxId
 
-def getLastShiftFromDb(con : sqlite3.Connection, finalQuery = False):
+def get_last_shift_from_db(con : sqlite3.Connection, finalQuery = False):
     cur = con.cursor()
     cur.execute("SELECT Content FROM shift WHERE Number == (SELECT Max(Number) FROM shift)")
     shift = cur.fetchone()[0] 
@@ -139,7 +133,7 @@ def getLastShiftFromDb(con : sqlite3.Connection, finalQuery = False):
         con.close()
     return shift
 
-def editShiftInDB(con : sqlite3.Connection, content : str, finalQuery = False):
+def edit_shift_in_db(con : sqlite3.Connection, content : str, finalQuery = False):
     cur = con.cursor()
     query = f"UPDATE shift SET Content = '{content}' WHERE Number == (SELECT MAX(Number) FROM shift)"
     cur.execute(query)
@@ -147,48 +141,48 @@ def editShiftInDB(con : sqlite3.Connection, content : str, finalQuery = False):
     if (finalQuery):
         con.close()
 
-def closeSQLite(): 
+def close_sqlite(): 
     try:
         subprocess.call(["taskkill", "/f", "/im", "DB Browser for SQLite.exe"])
     except:
         pass
 
-def deleteFolder(filePath):
-    closeSQLite()
+def delete_folder(filePath):
+    close_sqlite()
     try:
         shutil.rmtree(filePath)
     except:
         print(f"Не удалось удалить папку с адресом:\n{filePath}")
 
-def findCashboxPath():
-    for path in getProgramFilesPaths():
-        dir = findChildDirPath(path, "SKBKontur")
+def find_cashbox_path():
+    for path in get_programfiles_paths():
+        dir = find_child_dir_path(path, "SKBKontur")
         if dir != "":
             cashboxPath = os.path.join(path, "SKBKontur", "Cashbox")   
     return cashboxPath
 
-def findConfigPath():
-    cashbox = findCashboxPath()
+def find_config_path():
+    cashbox = find_cashbox_path()
     bin = os.path.join(cashbox, "bin")
     for root, dirs, files in os.walk(bin):
         configPath = os.path.join(root, dirs[0], "cashboxService.config.json")
         break
     assert configPath != "", "Can't find config path"
-    writeJsonValue("configPath", configPath)
+    cache_in_local_json("configPath", configPath)
     return configPath
 
-def setStaging(stagingNumber):
-    changeCashboxServiceState(True)
-    configPath = findConfigPath()
-    changeStagingInConfig(stagingNumber, configPath)
-    changeCashboxServiceState(False)
+def set_staging(stagingNumber):
+    change_cashbox_service_state(True)
+    configPath = find_config_path()
+    change_staging_in_config(stagingNumber, configPath)
+    change_cashbox_service_state(False)
 
-def getBackendUrlFromConfig(configPath):
+def get_backend_url_from_config(configPath):
     with open(configPath, "r") as file:
         rawJson = file.read()
         return json.loads(rawJson)["settings"][0]["cashboxBackendUrl"]
 
-def changeStagingInConfig(stagingNumber, configPath):
+def change_staging_in_config(stagingNumber, configPath):
     with open(configPath, "r+") as file:
         rawJson = file.read()
         data = json.loads(rawJson)
@@ -207,7 +201,7 @@ def changeStagingInConfig(stagingNumber, configPath):
         file.write(newJson)
         file.truncate()   
 
-def changeCashboxServiceState(shouldStop):
+def change_cashbox_service_state(shouldStop):
     try:
         subprocess.call(['sc', f'{"stop" if shouldStop else "start"}', 'SKBKontur.Cashbox'])
         time.sleep(1 if shouldStop else 4)
@@ -215,21 +209,21 @@ def changeCashboxServiceState(shouldStop):
     except:
         return False
 
-def findChildDirPath(path, dir):
+def find_child_dir_path(path, dir):
     for root, dirs, files in os.walk(path):
         if (dir in dirs):
             return os.path.join(root, dir)
         break 
     return "" 
 
-def getProgramFilesPaths():
+def get_programfiles_paths():
     paths = []
-    for diskDrive in readJsonValue("diskDrives"):
+    for diskDrive in get_from_local_json("diskDrives"):
         paths.append(os.path.join(diskDrive, "Program Files"))
         paths.append(os.path.join(diskDrive, "Program Files (x86)"))
     return paths
 
-def writeJsonValue(key, value, path = os.path.join("data.json")):
+def cache_in_local_json(key, value, path = os.path.join("data.json")):
     with open(path, "r+") as file:
         rawJson = file.read()
         data = json.loads(rawJson)
@@ -239,7 +233,7 @@ def writeJsonValue(key, value, path = os.path.join("data.json")):
         file.write(newJson)
         file.truncate()
 
-def readJsonValue(key, path = os.path.join("data.json")):
+def get_from_local_json(key, path = os.path.join("data.json")):
     with open(path, "r") as file:
         rawJson = file.read()
         data = json.loads(rawJson)
