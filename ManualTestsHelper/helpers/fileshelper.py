@@ -223,7 +223,8 @@ def get_programfiles_paths():
         paths.append(os.path.join(diskDrive, "Program Files (x86)"))
     return paths
 
-def cache_in_local_json(key, value, path = os.path.join("data.json")):
+def cache_in_local_json(key, value):
+    path = os.path.join(os.path.dirname(__file__), "data.json")
     with open(path, "r+") as file:
         rawJson = file.read()
         data = json.loads(rawJson)
@@ -233,7 +234,8 @@ def cache_in_local_json(key, value, path = os.path.join("data.json")):
         file.write(newJson)
         file.truncate()
 
-def get_from_local_json(key, path = os.path.join("data.json")):
+def get_from_local_json(key):
+    path = os.path.join(os.path.dirname(__file__), "data.json")
     with open(path, "r") as file:
         rawJson = file.read()
         data = json.loads(rawJson)
