@@ -8,12 +8,17 @@ from helpers.fileshelper import *
 from helpers.nethelper import *
 import pyperclip
 import keyboard
+from console import fg, bg, fx
+import console.utils
 
 ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_settings", "receipt", "setKkt", "scanner"]
 PROG_NAME = "kmk_scripts"
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
 MARKTYPES = ["Excise", "Tabak", "Cis", "Milk"]
+ERROR = (bg.lightred + fg.black)("ОШИБКА")
+HELLO = (bg.green + fg.black)("Горячие клавиши - в вашем распоряжении")
+file_change_style = fg.lightblack + fx.italic
 
 def turn_cashbox_service(shouldStop=True):
     """ Даёт команду службе кассы: stop или start """
@@ -118,7 +123,7 @@ def use_scanner(mode="normal"):
             paste_mark_in_scanner_mode(MARKTYPES[number - 1], False, False)
 
 def main():
-    print("Скрипты запущены, горячие клавиши уже работают")
+    print(HELLO)
     keyboard.add_hotkey("alt+5", lambda: turn_cashbox_service(True))
     keyboard.add_hotkey("alt+6", lambda: turn_cashbox_service(False))
     keyboard.add_hotkey("alt+1", lambda: set_stage("1"))
