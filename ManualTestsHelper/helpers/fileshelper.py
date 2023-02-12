@@ -59,7 +59,8 @@ def paste_mark_in_scanner_mode(productType, bufferMode: bool, quietMode: bool):
         else:  
             mark = get_mark_from_file(productType) 
     cache_in_local_json("lastMark", mark)
-    keyboard.press_and_release("alt + tab")
+    if not quietMode:
+        keyboard.press_and_release("alt + tab")
     time.sleep(1)
     for i in range(len(mark)):
         keyboard.write(mark[i])
