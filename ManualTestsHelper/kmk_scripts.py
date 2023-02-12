@@ -11,8 +11,6 @@ import keyboard
 from console import fg, bg, fx
 import console.utils
 
-ENTITIES = ["stage", "cashbox", "cashboxId", "delete", "gen", "shift", "flip_settings", "receipt", "setKkt", "scanner"]
-PROG_NAME = "kmk_scripts"
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
 MARKTYPES = ["Excise", "Tabak", "Cis", "Milk"]
