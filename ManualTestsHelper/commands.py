@@ -16,12 +16,14 @@ POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
 MARKTYPES = ["Excise", "Tabak", "Cis", "Milk"]
 ERR = bg.lightred + fg.black
 YO = bg.green + fg.black
-SUCCESS = lambda: print(YO("\nСкрипт завершился успешно\n"))
+SUCCESS = lambda: print(YO("\nСкрипт завершился успешно\n\n"))
 file_change_style = fg.lightblack + fx.italic
 
 class Command:
     @staticmethod
-    def alias():
+    def name():
+        raise NotImplementedError()
+    def description(self):
         raise NotImplementedError()
     def help():
         raise NotImplementedError()
@@ -29,17 +31,15 @@ class Command:
         raise NotImplementedError()
     def print_result(self):
         raise NotImplementedError()	
-    def name(self):
-        raise NotImplementedError()
-    def description(self):
-        raise NotImplementedError()
 
 class TurnOffCashbox(Command):
     @staticmethod
-    def alias():
+    def name():
         return "turn"  
+    def description(self):
+        return "Даёт команду службе кассы: stop или start"
     def help(self, message = ""):
-        print(message + "\n" + f"У команды '{TurnOffCashbox.alias()}' один аргумент: " 
+        print(message + "\n" + f"У команды '{TurnOffCashbox.name()}' один аргумент: " 
         + "1 - остановить службу, 0 - запустить")
     def execute(self, *params):
         if (len(params) != 1):
@@ -57,17 +57,15 @@ class TurnOffCashbox(Command):
             SUCCESS()
         else: 
             print(f"Не удалось {'остановить' if self.__should_stop else 'запустить'} службу SKBKontur.Cashbox")
-    def name(self):
-        return "Остановка или запуск службы"
-    def description(self):
-        return "Даёт команду службе кассы: stop или start"
 
 class SetStage(Command):
     @staticmethod
-    def alias():
+    def name():
         return "stage"
+    def description(self):
+        return "Выбор стейджа для кассы"
     def help(self, message):
-        print(message + "\n" + f"У команды '{SetStage.alias()}' один аргумент: " 
+        print(message + "\n" + f"У команды '{SetStage.name()}' один аргумент: " 
         + "1 - первый стейдж, 2 - второй, 9 - прод")
     def execute(self, *params):
         if (len(params) != 1):
@@ -82,15 +80,10 @@ class SetStage(Command):
     def print_result(self):
         print(f"Касса готова к работе с {self.stage + ' стейджем' if self.stage != '9' else ' продом'}")
         SUCCESS() 
-    def name(self):
-        return "Выбор стейджа для кассы"
-    def description(self):
-        return """Выставляем в конфиге адрес, который соответствует первому или второму стейджу. 
-            А цифре 9 соответствуют продовые настройки"""
 
 class GetCashboxId(Command):
     @staticmethod
-    def alias():
+    def name():
         return "getid"
     def help(self):
         return "В буфер обмена попадает текущий cashboxId - он достаётся из БД"
@@ -101,13 +94,15 @@ class GetCashboxId(Command):
     def print_result(self):
         print(f"В вашем буфере обмена — текущий cashboxId: \n{self.cashboxId}")
         SUCCESS()
-    def name(self):
-        return "Получить cashboxId"
+    def description(self):
+        return "Получить cashboxId в буфер обмена"
 
 class CacheCashboxId(Command):
     @staticmethod
-    def alias():
+    def name():
         return "setid"
+    def description(self):
+        return "Вставить CashboxId из буфера в data.json"
     def execute(self):
         self.cashboxId = pyperclip.paste()
         OS.cache_in_local_json("cashboxId", self.cashboxId)
@@ -115,20 +110,15 @@ class CacheCashboxId(Command):
     def print_result(self):
         print(f"Вы вставили из буфера в data.json cashboxId = \n{self.cashboxId}")
         SUCCESS()
-    def name(self):
-        return "Закэшировать CashboxId из буфера"
-    def description(self):
-        return """Значение из буфера окажется в файле data.json
-        Это поможет сгенерировать токен, если БД пустая. 
-        Если БД не пустая, команда бесполезна: все скрипты будут брать cashboxId из БД
-        """
 
 class DeleteCashbox(Command):
     @staticmethod
-    def alias():
+    def name():
         return "del"
+    def description(self):
+        return "Удалить кассу или БД"
     def help(self, message):
-        print(message + "\n" + f"У команды '{DeleteCashbox.alias()}' два аргумента: " 
+        print(message + "\n" + f"У команды '{DeleteCashbox.name()}' два аргумента: " 
         + "1. 1 - удалить БД, 0 - не удалять \n 2. 1 - удалить КМК, 0 - не удалять")
     def execute(self, *params):
         if (len(params) != 2):
@@ -152,15 +142,13 @@ class DeleteCashbox(Command):
         if self.delete_db:
             print("БД кассы удалена")
         SUCCESS()
-    def name(self):
-        return "Удалить кассу или БД"
-    def description(self):
-        return "Удалить папку с базой данных или папку bin с приложением"
 
 class GenToken(Command):
     @staticmethod
-    def alias():
+    def name():
         return "token"
+    def description(self):
+        return "Сгенерировать токен для активации кассы"
     def execute(self):
         self.cashboxId = DB().get_cashbox_id()
         backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
@@ -170,15 +158,13 @@ class GenToken(Command):
     def print_result(self):
         print(f"В вашем буфере обмена - новый токен для кассы: \n{self.cashboxId}")
         SUCCESS()
-    def name(self):
-        return "Сгенерировать токен для активации кассы"
-    def description(self):
-        return "Токен для активации кассы генерируется запросом к кассовому серверу"
 
 class GenGuid(Command):
     @staticmethod
-    def alias():
+    def name():
         return "guid"
+    def description(self):
+        return "Сгенерировать произвольный гуид"
     def execute(self):
         self.guid = str(uuid.uuid4())
         pyperclip.copy(self.guid)
@@ -186,17 +172,15 @@ class GenGuid(Command):
     def print_result(self):
         print(f"В вашем буфере - guid: \n{self.guid}")
         SUCCESS()
-    def name(self):
-        return "Сгенерировать guid"
-    def description(self):
-        return "Генерирует произвольный гуид"
 
 class SetShiftDuration(Command):
     @staticmethod
-    def alias():
+    def name():
         return "shift"
+    def description(self):
+        return "Установить длительность смены на КМК"
     def help(self, message):
-        print(message + "\n" + f"У команды '{SetShiftDuration.alias()}' один аргумент: " 
+        print(message + "\n" + f"У команды '{SetShiftDuration.name()}' один аргумент: " 
         + "желаемое количество часов в смене")
     def execute(self, *params):
         if (len(params) != 1):
@@ -212,18 +196,13 @@ class SetShiftDuration(Command):
     def print_result(self):
         print(f"Длительность текущей смены = {self.duration_in_hours}")
         SUCCESS()
-    def name(self):
-        return "Установить длительность смены"
-    def description(self):
-        return """Установить длительность текущей смены на КМК.
-        Например, чтобы уменьшить слишком большую смену.
-        Или, наоборот, посмотреть на модалы про смену больше 24 часов
-        """
 
 class UnregLastReceipt(Command):
     @staticmethod
-    def alias():
+    def name():
         return "unreg"
+    def description(self):
+        return "Делает статус последнего чека в БД = Error"
     def execute(self):
         db = DB()
         con = db.set_db_connection()
@@ -236,18 +215,15 @@ class UnregLastReceipt(Command):
     def print_result(self):
         print(f"Последний чек продажи стал незареганным. \nОн на сумму = {self.receipt['contributedSum']}")
         SUCCESS()
-    def name(self):
-        return "Превращает последний чек в незарегистрированный"
-    def description(self):
-        return """У последнего чека в БД статус меняется на Error. 
-        После этого можно провести его коррекцию"""
 
 class FlipSettings(Command):
     @staticmethod
-    def alias():
+    def name():
         return "settings"
+    def description(self):
+        return "Изменение буллевых настроек кассы"
     def help(self, message):
-        print(message + "\n" + f"У команды '{FlipSettings.alias()}' один аргумент: " 
+        print(message + "\n" + f"У команды '{FlipSettings.name()}' один аргумент: " 
         + "название настройки. Например, moveRemainsToNextShift или prepaidEnabled")
     def execute(self, *params):
         if (len(params) != 1):
@@ -265,17 +241,13 @@ class FlipSettings(Command):
     def print_result(self):
         print(f'Настройка {self.settings_name} теперь = {self.settings["settings"]["backendSettings"][self.settings_name]}')
         SUCCESS()
-    def name(self):
-        return "Изменение настройки кассы"
-    def description(self):
-        return """Переворачиваем значение буллевой настройки в backendSettings
-        Например, moveRemainsToNextShift или prepaidEnabled
-        """
 
 class SetHardwareSettings(Command):
     @staticmethod
-    def alias():
+    def name():
         return "kkms"
+    def description(self):
+        return "Выбрать 1-2 ККТ и терминала"
     def execute(self):
         print("""Выберите 1 или 2 ККТ: первая для ЮЛ с ИНН = 6699000000, вторая - для ЮЛ с ИНН = 992570272700
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
@@ -307,19 +279,15 @@ class SetHardwareSettings(Command):
     def print_result(self):
         print(f"Ваши ККТ: {', '.join(self.kkt) }\nВаши терминалы: {', '.join(self.pos)}")
         SUCCESS()
-    def name(self):
-        return "Прописать в настройках ККТ и терминалы"
-    def description(self):
-        return """Выбранные ККТ будут прописаны в настройках на КС
-        Если ККТ две - второй организации будут принадлежать товары с окончанием _2ЮЛ
-        """
 
 class UseScanner(Command):
     @staticmethod
-    def alias():
+    def name():
         return "scanner"
+    def description(self):
+        return "Вставить марки виртуальным сканером"
     def help(self, message = ""):
-        print(message + "\n" + f"У команды '{UseScanner.alias()}' один аргумент: " 
+        print(message + "\n" + f"У команды '{UseScanner.name()}' один аргумент: " 
         + "normal - выбор марки, quiet - вставка прошлой марки")
     def execute(self, *params):
         if (len(params) != 1):
@@ -342,51 +310,36 @@ class UseScanner(Command):
     def print_result(self):
         print("Код марки успешно введен в режиме сканера")
         SUCCESS()
-    def name(self):
-        return "Использовать виртуальный сканер"
-    def description(self):
-        return """В режиме сканера символы вставляются по одному (марки вставляются только так).
-        Используйте сгенерированные коды марок или вставьте их из буфера
-        """
 
-COMMANDS = {
-    TurnOffCashbox.alias() : TurnOffCashbox(),
-    SetStage.alias() : SetStage(),
-    GetCashboxId.alias() : GetCashboxId(),
-    CacheCashboxId.alias() : CacheCashboxId(),
-    DeleteCashbox.alias() : DeleteCashbox(),
-    GenToken.alias() : GenToken(),
-    GenGuid.alias() : GenGuid(),
-    SetShiftDuration.alias() : SetShiftDuration(),
-    UnregLastReceipt.alias() : UnregLastReceipt(),
-    FlipSettings.alias() : FlipSettings(),
-    SetHardwareSettings.alias() : SetHardwareSettings(),
-    UseScanner.alias() : UseScanner()
-}
+
+COMMANDS = [TurnOffCashbox(), SetStage(), GetCashboxId(), CacheCashboxId(), DeleteCashbox(), GenToken(), 
+GenGuid(), SetShiftDuration(), UnregLastReceipt(), FlipSettings(), SetHardwareSettings(), UseScanner()]
+COMMAND_NAMES = {command.name() : command for command in COMMANDS}
+COMMAND_DESCRIPTIONS = {command.name() : command.description() for command in COMMANDS}
 
 def main():
     print(YO("\nКассовых успехов!\n\n"))
     print("Выберите режим: \n1. Горячие клавиши \n2. Команды в консоли")
     if (input() == "1"):
-        keyboard.add_hotkey("alt+5", lambda: COMMANDS[TurnOffCashbox.alias()].execute("1"))
-        keyboard.add_hotkey("alt+6", lambda: COMMANDS[TurnOffCashbox.alias()].execute("0"))
-        keyboard.add_hotkey("alt+1", lambda: COMMANDS[SetStage.alias()].execute("1"))
-        keyboard.add_hotkey("alt+2", lambda: COMMANDS[SetStage.alias()].execute("2"))
-        keyboard.add_hotkey("alt+9", lambda: COMMANDS[SetStage.alias()].execute("9"))
-        keyboard.add_hotkey("alt+p", lambda: COMMANDS[GetCashboxId.alias()].execute())
-        keyboard.add_hotkey("alt+i", lambda: COMMANDS[CacheCashboxId.alias()].execute())
-        keyboard.add_hotkey("alt+d", lambda: COMMANDS[DeleteCashbox.alias()].execute("1", "0"))
-        keyboard.add_hotkey("alt+c", lambda: COMMANDS[DeleteCashbox.alias()].execute("0", "1"))
-        keyboard.add_hotkey("alt+shift+c", lambda: COMMANDS[DeleteCashbox.alias()].execute("1", "1"))
-        keyboard.add_hotkey("alt+t", lambda: COMMANDS[GenToken.alias()].execute())
-        keyboard.add_hotkey("alt+g", lambda: COMMANDS[GenGuid.alias()].execute())
-        keyboard.add_hotkey("alt+-", lambda: COMMANDS[SetShiftDuration.alias()].execute("24"))
-        keyboard.add_hotkey("alt+e", lambda: COMMANDS[UnregLastReceipt.alias()].execute()) 
-        keyboard.add_hotkey("alt+o", lambda: COMMANDS[FlipSettings.alias()].execute("moveRemainsToNextShift"))
-        keyboard.add_hotkey("alt+a", lambda: COMMANDS[FlipSettings.alias()].execute("prepaidEnabled"))
-        keyboard.add_hotkey("alt+k", lambda: COMMANDS[SetHardwareSettings.alias()].execute())   
-        keyboard.add_hotkey('alt+s', lambda: COMMANDS[UseScanner.alias()].execute("normal"))
-        keyboard.add_hotkey('alt+shift+s', lambda: COMMANDS[UseScanner.alias()].execute("quiet"))
+        keyboard.add_hotkey("alt+5", lambda: COMMAND_NAMES[TurnOffCashbox.name()].execute("1"))
+        keyboard.add_hotkey("alt+6", lambda: COMMAND_NAMES[TurnOffCashbox.name()].execute("0"))
+        keyboard.add_hotkey("alt+1", lambda: COMMAND_NAMES[SetStage.name()].execute("1"))
+        keyboard.add_hotkey("alt+2", lambda: COMMAND_NAMES[SetStage.name()].execute("2"))
+        keyboard.add_hotkey("alt+9", lambda: COMMAND_NAMES[SetStage.name()].execute("9"))
+        keyboard.add_hotkey("alt+p", lambda: COMMAND_NAMES[GetCashboxId.name()].execute())
+        keyboard.add_hotkey("alt+i", lambda: COMMAND_NAMES[CacheCashboxId.name()].execute())
+        keyboard.add_hotkey("alt+d", lambda: COMMAND_NAMES[DeleteCashbox.name()].execute("1", "0"))
+        keyboard.add_hotkey("alt+c", lambda: COMMAND_NAMES[DeleteCashbox.name()].execute("0", "1"))
+        keyboard.add_hotkey("alt+shift+c", lambda: COMMAND_NAMES[DeleteCashbox.name()].execute("1", "1"))
+        keyboard.add_hotkey("alt+t", lambda: COMMAND_NAMES[GenToken.name()].execute())
+        keyboard.add_hotkey("alt+g", lambda: COMMAND_NAMES[GenGuid.name()].execute())
+        keyboard.add_hotkey("alt+-", lambda: COMMAND_NAMES[SetShiftDuration.name()].execute("24"))
+        keyboard.add_hotkey("alt+e", lambda: COMMAND_NAMES[UnregLastReceipt.name()].execute()) 
+        keyboard.add_hotkey("alt+o", lambda: COMMAND_NAMES[FlipSettings.name()].execute("moveRemainsToNextShift"))
+        keyboard.add_hotkey("alt+a", lambda: COMMAND_NAMES[FlipSettings.name()].execute("prepaidEnabled"))
+        keyboard.add_hotkey("alt+k", lambda: COMMAND_NAMES[SetHardwareSettings.name()].execute())   
+        keyboard.add_hotkey('alt+s', lambda: COMMAND_NAMES[UseScanner.name()].execute("normal"))
+        keyboard.add_hotkey('alt+shift+s', lambda: COMMAND_NAMES[UseScanner.name()].execute("quiet"))
         keyboard.add_abbreviation('adm1', 'https://market.testkontur.ru/AdminTools')
         keyboard.add_abbreviation('adm2', 'https://market-dev.testkontur.ru/AdminTools')
         keyboard.add_abbreviation('csadm1', 'https://market.testkontur.ru/cashboxApi/admin/web/cashbox/')
@@ -397,13 +350,14 @@ def main():
         print("Уже можно вводить команды \n")        
         while(True):
             print("Список команд: \n")
-            for command in COMMANDS:
+            # здесь выводить команду с description в две колонки
+            for command in COMMAND_NAMES:
                 print(command) 
             print("\n ")            
             res = input().strip().split()
             cmd = res[0]
             try:
-                command = COMMANDS[cmd]
+                command = COMMAND_NAMES[cmd]
                 command.execute(*res[1:])
             except KeyError:
                 print("Команда не найдена")
