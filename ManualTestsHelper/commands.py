@@ -1,11 +1,15 @@
 import os
 import datetime
 import uuid
-from helpers.fileshelper import * 
-from helpers.nethelper import *
+import sys
+import ctypes
+import json
+from helpers.fileshelper import Mark, DB, OS 
+from helpers.nethelper import CS
 import pyperclip
 import keyboard
 from console import fg, bg, fx
+import console.utils
 
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
@@ -45,7 +49,7 @@ class TurnOffCashbox(Command):
             self.help(ERR("Неверный аргумент"))
             return
         self.__should_stop = bool(int(params[0]))
-        self.__success = change_cashbox_service_state(self.__should_stop)
+        self.__success = OS.change_cashbox_service_state(self.__should_stop)
         self.print_result()
     def print_result(self):
         if self.__success:
@@ -73,7 +77,7 @@ class SetStage(Command):
             self.help(ERR("Неверный аргумент"))
             return
         self.stage = params[0]
-        set_staging(int(self.stage))
+        OS.set_staging(int(self.stage))
         self.print_result()
     def print_result(self):
         print(f"Касса готова к работе с {self.stage + ' стейджем' if self.stage != '9' else ' продом'}")
@@ -91,7 +95,7 @@ class GetCashboxId(Command):
     def help(self):
         return "В буфер обмена попадает текущий cashboxId - он достаётся из БД"
     def execute(self):
-        self.cashboxId = get_cashbox_id()
+        self.cashboxId = DB().get_cashbox_id()
         pyperclip.copy(self.cashboxId)
         self.print_result()
     def print_result(self):
@@ -106,7 +110,7 @@ class CacheCashboxId(Command):
         return "setid"
     def execute(self):
         self.cashboxId = pyperclip.paste()
-        cache_in_local_json("cashboxId", self.cashboxId)
+        OS.cache_in_local_json("cashboxId", self.cashboxId)
         self.print_result()
     def print_result(self):
         print(f"Вы вставили из буфера в data.json cashboxId = \n{self.cashboxId}")
@@ -135,12 +139,12 @@ class DeleteCashbox(Command):
             return
         self.delete_db = bool(int(params[0]))
         self.delete_cashbox = bool(int(params[1]))
-        change_cashbox_service_state(True)
-        cashboxPath = find_cashbox_path()
+        OS.change_cashbox_service_state(True)
+        cashboxPath = OS.find_cashbox_path()
         if self.delete_db:
-            delete_folder(os.path.join(cashboxPath, "db"))
+            OS.delete_folder(os.path.join(cashboxPath, "db"))
         if self.delete_cashbox:
-            delete_folder(os.path.join(cashboxPath, "bin"))
+            OS.delete_folder(os.path.join(cashboxPath, "bin"))
         self.print_result()
     def print_result(self):
         if self.delete_cashbox:
@@ -158,9 +162,10 @@ class GenToken(Command):
     def alias():
         return "token"
     def execute(self):
-        self.cashboxId = get_cashbox_id()
-        backendUrl = get_backend_url_from_config(find_config_path())
-        gen_token_CS(start_session(), self.cashboxId, backendUrl)
+        self.cashboxId = DB().get_cashbox_id()
+        backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
+        cs = CS()
+        cs.gen_token_CS(cs.start_session(), self.cashboxId, backendUrl)
         self.print_result()
     def print_result(self):
         print(f"В вашем буфере обмена - новый токен для кассы: \n{self.cashboxId}")
@@ -198,10 +203,11 @@ class SetShiftDuration(Command):
             self.help(ERR("Неверное количество параметров"))
             return
         self.duration_in_hours = int(params[0])
-        con = set_db_connection()
-        shift = json.loads(get_last_shift_from_db(con))
+        db = DB()
+        con = db.set_db_connection()
+        shift = json.loads(db.get_last_shift_from_db(con))
         shift["openInfo"]["openDateTime"] = str(datetime.datetime.now() - datetime.timedelta(hours = self.duration_in_hours))
-        edit_shift_in_db(con, json.dumps(shift), True)
+        db.edit_shift_in_db(con, json.dumps(shift), True)
         self.print_result()
     def print_result(self):
         print(f"Длительность текущей смены = {self.duration_in_hours}")
@@ -219,12 +225,13 @@ class UnregLastReceipt(Command):
     def alias():
         return "unreg"
     def execute(self):
-        con = set_db_connection()
-        (id, shiftId, number, content) = get_last_receipt(con)
+        db = DB()
+        con = db.set_db_connection()
+        (id, shiftId, number, content) = db.get_last_receipt(con)
         self.receipt = json.loads(content)
         self.receipt["kkmRegistrationStatus"] = "Error"
         self.receipt["correctionReceiptId"] = None
-        update_receipt_content(con, json.dumps(self.receipt), id, True)
+        db.update_receipt_content(con, json.dumps(self.receipt), id, True)
         self.print_result()
     def print_result(self):
         print(f"Последний чек продажи стал незареганным. \nОн на сумму = {self.receipt['contributedSum']}")
@@ -247,12 +254,13 @@ class FlipSettings(Command):
             self.help(ERR("Неверное количество параметров"))
             return
         self.settings_name = params[0]
-        cashboxId = get_cashbox_id()
-        session = start_session()
-        backendUrl = get_backend_url_from_config(find_config_path())
-        self.settings = get_cashbox_settings_json(session, cashboxId, backendUrl)
-        flippedSettings = flip_settings_CS(self.settings, self.settings_name)
-        post_cashbox_settings(session, cashboxId, flippedSettings, backendUrl)
+        cashboxId = DB().get_cashbox_id()
+        cs = CS()
+        session = cs.start_session()
+        backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
+        self.settings = cs.get_cashbox_settings_json(session, cashboxId, backendUrl)
+        flippedSettings = cs.flip_settings_CS(self.settings, self.settings_name)
+        cs.post_cashbox_settings(session, cashboxId, flippedSettings, backendUrl)
         self.print_result()
     def print_result(self):
         print(f'Настройка {self.settings_name} теперь = {self.settings["settings"]["backendSettings"][self.settings_name]}')
@@ -282,17 +290,19 @@ class SetHardwareSettings(Command):
         if len(kktNumbers) != len(posNumbers):
             print(ERR("Вы указали разное количество ККТ и терминалов"))
             return
-        change_cashbox_service_state(True)
+        OS.change_cashbox_service_state(True)
         self.kkt = []
         self.pos = []
         for i in range (len(kktNumbers)):
             self.kkt.append(KKT[kktNumbers[i]])
             self.pos.append(POS[posNumbers[i]])
-        cashboxId = get_cashbox_id()
-        backendUrl = get_backend_url_from_config(find_config_path())
-        le = change_hardware_settings(start_session(), cashboxId, self.kkt, self.pos, backendUrl)
-        set_legalentityid_in_products(le, True)
-        change_cashbox_service_state(False)
+        db = DB()
+        cashboxId = db.get_cashbox_id()
+        backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
+        cs = CS()
+        le = cs.change_hardware_settings(cs.start_session(), cashboxId, self.kkt, self.pos, backendUrl)
+        db.set_legalentityid_in_products(le, True)
+        OS.change_cashbox_service_state(False)
         self.print_result()
     def print_result(self):
         print(f"Ваши ККТ: {', '.join(self.kkt) }\nВаши терминалы: {', '.join(self.pos)}")
@@ -318,15 +328,16 @@ class UseScanner(Command):
         if (params[0] not in ["normal", "quiet"]):
             self.help(ERR("Неверный аргумент"))
             return
+        mark = Mark()
         if params[0] == "quiet":
-            paste_mark_in_scanner_mode("", False, True)
+            mark.paste_mark_in_scanner_mode("", False, True)
         else:
             print("Какую марку вставить? Введите число: \n \n 0. Из буфера \n 1. Акцизную \n 2. Сигарет \n 3. Шин, духов, одежды, обуви, фото, воды \n 4. Молока")
             number = int(input().strip())
             if number == 0:
-                paste_mark_in_scanner_mode("", True, False)
+                mark.paste_mark_in_scanner_mode("", True, False)
             else: 
-                paste_mark_in_scanner_mode(MARKTYPES[number - 1], False, False)
+                mark.paste_mark_in_scanner_mode(MARKTYPES[number - 1], False, False)
         self.print_result()
     def print_result(self):
         print("Код марки успешно введен в режиме сканера")
@@ -383,12 +394,12 @@ def main():
         keyboard.add_abbreviation('apidoc', 'https://developer.kontur.ru/')
         keyboard.wait('alt+esc')
     else:
-        print("Уже можно вводить команды \n Варианты: ")
-        for command in COMMANDS:
-            print(command) 
-        print("\n ")
-        
+        print("Уже можно вводить команды \n")        
         while(True):
+            print("Список команд: \n")
+            for command in COMMANDS:
+                print(command) 
+            print("\n ")            
             res = input().strip().split()
             cmd = res[0]
             try:
