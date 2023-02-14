@@ -21,28 +21,38 @@ SUCCESS = lambda: print(YO("\nСкрипт завершился успешно\n
 file_change_style = fg.lightblack + fx.italic
 
 class Command:
+
+
     @staticmethod
     def name():
         raise NotImplementedError()
+
     @staticmethod
     def description():
         raise NotImplementedError()
+
     @staticmethod
     def help():
         raise NotImplementedError()
+
     @staticmethod
     def execute():
         raise NotImplementedError()
 
 class TurnOffCashbox(Command):
+
+
     @staticmethod
     def name():
         return "turn"  
+
     def description():
         return "Отключает (1) или включает (0) службу кассы"
+
     def help(message = ""):
         print(message + "\n" + f"У команды '{TurnOffCashbox.name()}' один аргумент: " 
         + "1 - остановить службу, 0 - запустить")
+
     def execute(*params):
         if (len(params) != 1):
             TurnOffCashbox.help(ERR("Неверное количество параметров"))
@@ -59,14 +69,19 @@ class TurnOffCashbox(Command):
             print(f"Не удалось {'остановить' if should_stop else 'запустить'} службу SKBKontur.Cashbox")
 
 class SetStage(Command):
+
+
     @staticmethod
     def name():
         return "stage"
+
     def description():
         return "Выбор стейджа для кассы: 1 или 2"
+
     def help(message):
         print(message + "\n" + f"У команды '{SetStage.name()}' один аргумент: " 
         + "1 - первый стейдж, 2 - второй, 9 - прод")
+
     def execute(*params):
         if (len(params) != 1):
             SetStage.help(ERR("Неверное количество параметров"))
@@ -80,13 +95,18 @@ class SetStage(Command):
         SUCCESS() 
 
 class GetCashboxId(Command):
+
+
     @staticmethod
     def name():
         return "getid"
+
     def description():
         return "Скопировать текущий cashboxId в буфер"
+
     def help():
         return "В буфер обмена попадает текущий cashboxId - он достаётся из БД"
+
     def execute():
         cashboxId = DB().get_cashbox_id()
         pyperclip.copy(cashboxId)
@@ -94,11 +114,15 @@ class GetCashboxId(Command):
         SUCCESS()
 
 class CacheCashboxId(Command):
+
+
     @staticmethod
     def name():
         return "setid"
+
     def description():
         return "Вставить cashboxId из буфера в data.json"
+
     def execute():
         cashboxId = pyperclip.paste()
         OS.cache_in_local_json("cashboxId", cashboxId)
@@ -106,14 +130,19 @@ class CacheCashboxId(Command):
         SUCCESS()
 
 class DeleteCashbox(Command):
+
+
     @staticmethod
     def name():
         return "del"
+
     def description():
         return "Удалить кассу (0 1) или БД (1 0)"
+
     def help(message):
         print(message + "\n" + f"У команды '{DeleteCashbox.name()}' два аргумента: " 
         + "1. 1 - удалить БД, 0 - не удалять \n 2. 1 - удалить КМК, 0 - не удалять")
+
     def execute(*params):
         if (len(params) != 2):
             DeleteCashbox.help(ERR("Неверное количество параметров"))
@@ -136,11 +165,15 @@ class DeleteCashbox(Command):
         SUCCESS()
 
 class GenToken(Command):
+
+
     @staticmethod
     def name():
         return "token"
+
     def description():
         return "Сгенерировать токен для кассы"
+
     def execute():
         cashboxId = DB().get_cashbox_id()
         backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
@@ -150,11 +183,15 @@ class GenToken(Command):
         SUCCESS()
 
 class GenGuid(Command):
+
+
     @staticmethod
     def name():
         return "guid"
+
     def description():
         return "Сгенерировать произвольный гуид"
+
     def execute():
         guid = str(uuid.uuid4())
         pyperclip.copy(guid)
@@ -162,14 +199,19 @@ class GenGuid(Command):
         SUCCESS()
 
 class SetShiftDuration(Command):
+
+
     @staticmethod
     def name():
         return "shift"
+
     def description():
         return "Установить длительность смены в часах"
+
     def help(message):
         print(message + "\n" + f"У команды '{SetShiftDuration.name()}' один аргумент: " 
         + "желаемое количество часов в смене")
+
     def execute(*params):
         if (len(params) != 1):
             SetShiftDuration.help(ERR("Неверное количество параметров"))
@@ -184,11 +226,15 @@ class SetShiftDuration(Command):
         SUCCESS()
 
 class UnregLastReceipt(Command):
+
+
     @staticmethod
     def name():
         return "unreg"
+
     def description():
         return "Сделать последнему чеку статус = Error"
+
     def execute():
         db = DB()
         con = db.set_db_connection()
@@ -201,14 +247,19 @@ class UnregLastReceipt(Command):
         SUCCESS()
 
 class FlipSettings(Command):
+
+
     @staticmethod
     def name():
         return "settings"
+
     def description():
         return "Изменить буллевую настройку"
+
     def help(message):
         print(message + "\n" + f"У команды '{FlipSettings.name()}' один аргумент: " 
         + "название настройки. Например, moveRemainsToNextShift или prepaidEnabled")
+
     def execute(*params):
         if (len(params) != 1):
             FlipSettings.help(ERR("Неверное количество параметров"))
@@ -225,11 +276,15 @@ class FlipSettings(Command):
         SUCCESS()
 
 class SetHardwareSettings(Command):
+
+
     @staticmethod
     def name():
         return "kkms"
+
     def description():
         return "Выбрать 1-2 ККТ и терминала"
+
     def execute():
         print("""Выберите 1 или 2 ККТ: первая для ЮЛ с ИНН = 6699000000, вторая - для ЮЛ с ИНН = 992570272700
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
@@ -261,14 +316,19 @@ class SetHardwareSettings(Command):
         SUCCESS()
 
 class UseScanner(Command):
+
+
     @staticmethod
     def name():
         return "scanner"
+
     def description():
         return "Вставить марки виртуальным сканером"
+
     def help(message = ""):
         print(message + "\n" + f"У команды '{UseScanner.name()}' один аргумент: " 
         + "normal - выбор марки, quiet - вставка прошлой марки")
+        
     def execute(*params):
         if (len(params) != 1):
             UseScanner.help(ERR("Неверное количество параметров"))
@@ -276,16 +336,15 @@ class UseScanner(Command):
         if (params[0] not in ["normal", "quiet"]):
             UseScanner.help(ERR("Неверный аргумент"))
             return
-        mark = Mark()
         if params[0] == "quiet":
-            mark.paste_mark_in_scanner_mode("", False, True)
+            Mark.paste_mark_in_scanner_mode("", False, True)
         else:
             print("Какую марку вставить? Введите число: \n \n 0. Из буфера \n 1. Акцизную \n 2. Сигарет \n 3. Шин, духов, одежды, обуви, фото, воды \n 4. Молока")
             number = int(input().strip())
             if number == 0:
-                mark.paste_mark_in_scanner_mode("", True, False)
+                Mark.paste_mark_in_scanner_mode("", True, False)
             else: 
-                mark.paste_mark_in_scanner_mode(MARKTYPES[number - 1], False, False)
+                Mark.paste_mark_in_scanner_mode(MARKTYPES[number - 1], False, False)
         print("Код марки успешно введен в режиме сканера")
         SUCCESS()
 

@@ -10,9 +10,11 @@ import random
 import string
 
 class Mark():
-    def __init__(self):
-        self.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"%&'*+-./_,:;=<>?"
-    def encode_price_for_mark(self, price): 
+
+
+    ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"%&'*+-./_,:;=<>?"
+    
+    def encode_price_for_mark(price): 
         symbolNumbers = [] 
         while(True): 
             symbolNumbers.append(price % 80 ) 
@@ -24,16 +26,16 @@ class Mark():
             symbolNumbers.append(0)
         res = "" 
         for number in range(len(symbolNumbers) - 1, -1, -1): 
-            res += self.alphabet[symbolNumbers[number]] 
+            res += Mark.ALPHABET[symbolNumbers[number]] 
         return res
 
-    def get_mark_from_file(self, productType):
+    def get_mark_from_file(productType):
         path = os.path.join(os.path.dirname(__file__), "marks", productType + ".txt")
         with open(path, "r") as file:
             lines = file.readlines()
             return lines[random.randrange(len(lines))].strip()
 
-    def paste_mark_in_scanner_mode(self, productType, bufferMode: bool, quietMode: bool):
+    def paste_mark_in_scanner_mode(productType, bufferMode: bool, quietMode: bool):
         mark = ""
         if quietMode:
             mark = OS.get_from_local_json("lastMark")
@@ -48,13 +50,13 @@ class Mark():
             if productType == "Tabak": 
                 print("Какой нужен МРЦ в копейках?") 
                 price = int(input().strip()) 
-                mark = "0" + barcode + "-UWzSA8" + self.encode_price_for_mark(price) + OS.gen_random_string(5)
+                mark = "0" + barcode + "-UWzSA8" + Mark.encode_price_for_mark(price) + OS.gen_random_string(5)
             elif productType == "Cis":
                 mark = "010" + barcode + "21" + OS.gen_random_string(13) + "93" +  OS.gen_random_string(13)
             elif productType == "Milk":
                 mark = "010" + barcode + "21" + OS.gen_random_string(8) + "93" + OS.gen_random_string(4)
             else:  
-                mark = self.get_mark_from_file(productType) 
+                mark = Mark.get_mark_from_file(productType) 
         OS.cache_in_local_json("lastMark", mark)
         if not quietMode:
             keyboard.press_and_release("alt + tab")
@@ -64,6 +66,8 @@ class Mark():
             time.sleep(0.01)
 
 class DB():
+
+
     def set_db_connection(self):
         return sqlite3.connect(os.path.join(OS.find_cashbox_path(), "db", "db.db"))
 
@@ -141,6 +145,7 @@ class DB():
             con.close()
 
 class OS():
+
 
     @staticmethod
     def close_sqlite(): 
@@ -254,7 +259,8 @@ class OS():
             data = json.loads(rawJson)
             assert key in data, f"Key {key} not in {path}"
             return data[key]
-
+    
+    @staticmethod
     def gen_random_string(length):
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for i in range(length))
