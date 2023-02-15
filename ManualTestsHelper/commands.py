@@ -108,9 +108,9 @@ class GetCashboxId(Command):
         return "В буфер обмена попадает текущий cashboxId - он достаётся из БД"
 
     def execute():
-        cashboxId = DB().get_cashbox_id(True)
-        pyperclip.copy(cashboxId)
-        print(f"В вашем буфере обмена — текущий cashboxId: \n{cashboxId}")
+        cashbox_id = DB().get_cashbox_id(True)
+        pyperclip.copy(cashbox_id)
+        print(f"В вашем буфере обмена — текущий cashboxId: \n{cashbox_id}")
         SUCCESS()
 
 class CacheCashboxId(Command):
@@ -124,9 +124,9 @@ class CacheCashboxId(Command):
         return "Вставить cashboxId из буфера в data.json"
 
     def execute():
-        cashboxId = pyperclip.paste()
-        OS.cache_in_local_json("cashboxId", cashboxId)
-        print(f"Вы вставили из буфера в data.json cashboxId = \n{cashboxId}")
+        cashbox_id = pyperclip.paste()
+        OS.cache_in_local_json("cashboxId", cashbox_id)
+        print(f"Вы вставили из буфера в data.json cashboxId = \n{cashbox_id}")
         SUCCESS()
 
 class DeleteCashbox(Command):
@@ -153,11 +153,11 @@ class DeleteCashbox(Command):
         delete_db = bool(int(params[0]))
         delete_cashbox = bool(int(params[1]))
         OS.change_cashbox_service_state(True)
-        cashboxPath = OS.find_cashbox_path()
+        cashbox_path = OS.find_cashbox_path()
         if delete_db:
-            OS.delete_folder(os.path.join(cashboxPath, "db"))
+            OS.delete_folder(os.path.join(cashbox_path, "db"))
         if delete_cashbox:
-            OS.delete_folder(os.path.join(cashboxPath, "bin"))
+            OS.delete_folder(os.path.join(cashbox_path, "bin"))
         if delete_cashbox:
             print("Приложение кассы удалено")
         if delete_db:
@@ -175,10 +175,10 @@ class GenToken(Command):
         return "Сгенерировать токен для кассы"
 
     def execute():
-        cashboxId = DB().get_cashbox_id(True)
-        backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
-        CS().gen_token(cashboxId, backendUrl)
-        print(f"В вашем буфере обмена - новый токен для кассы: \n{cashboxId}")
+        cashbox_id = DB().get_cashbox_id(True)
+        backend_url = OS.get_backend_url_from_config(OS.find_config_path())
+        CS().gen_token(cashbox_id, backend_url)
+        print(f"В вашем буфере обмена - новый токен для кассы: \n{cashbox_id}")
         SUCCESS()
 
 class GenGuid(Command):
@@ -262,12 +262,12 @@ class FlipSettings(Command):
             FlipSettings.help(ERR("Неверное количество параметров"))
             return
         settings_name = params[0]
-        cashboxId = DB().get_cashbox_id(True)
+        cashbox_id = DB().get_cashbox_id(True)
         cs = CS()
-        backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
-        settings = cs.get_cashbox_settings_json(cashboxId, backendUrl)
-        flippedSettings = cs.flip_settings(settings, settings_name)
-        cs.post_cashbox_settings(cashboxId, flippedSettings, backendUrl)
+        backend_url = OS.get_backend_url_from_config(OS.find_config_path())
+        settings = cs.get_cashbox_settings_json(cashbox_id, backend_url)
+        flipped_settings = cs.flip_settings(settings, settings_name)
+        cs.post_cashbox_settings(cashbox_id, flipped_settings, backend_url)
         print(f'Настройка {settings_name} теперь = {settings["settings"]["backendSettings"][settings_name]}')
         SUCCESS()
 
@@ -285,29 +285,29 @@ class SetHardwareSettings(Command):
         print("""Выберите 1 или 2 ККТ: первая для ЮЛ с ИНН = 6699000000, вторая - для ЮЛ с ИНН = 992570272700
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
         \nНапример, если ввели "1" - Атол в режиме 1 ЮЛ, если "2 3" - Вики и Штрих в режиме 2ЮЛ\n""")
-        kktNumbers = list(map(int, input().strip().split()))
+        kkm_positions = list(map(int, input().strip().split()))
         print("""\nВыберите 1 или 2 терминала: 
         \n0. None \n1. External \n2. Inpas\n3. Ingenico \n4. Sberbank\n""")
-        posNumbers = list(map(int, input().strip().split()))
-        if len(kktNumbers) == 0 or len(posNumbers) == 0:
-            print(ERR("Вы не указали ККТ или эквайринги"))
+        terminal_positions = list(map(int, input().strip().split()))
+        if len(kkm_positions) == 0 or len(terminal_positions) == 0:
+            print(ERR("\nВы не указали ККТ или эквайринги\n\n"))
             return
-        if len(kktNumbers) != len(posNumbers):
-            print(ERR("Вы указали разное количество ККТ и терминалов"))
+        if len(kkm_positions) != len(terminal_positions):
+            print(ERR("\nВы указали разное количество ККТ и терминалов\n\n"))
             return
         OS.change_cashbox_service_state(True)
-        kkt = []
-        pos = []
-        for i in range (len(kktNumbers)):
-            kkt.append(KKT[kktNumbers[i]])
-            pos.append(POS[posNumbers[i]])
+        kkms = []
+        terminals = []
+        for i in range (len(kkm_positions)):
+            kkms.append(KKT[kkm_positions[i]])
+            terminals.append(POS[terminal_positions[i]])
         db = DB()
-        cashboxId = db.get_cashbox_id()
-        backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
-        le = CS().change_hardware_settings(cashboxId, kkt, pos, backendUrl)
+        cashbox_id = db.get_cashbox_id()
+        backend_url = OS.get_backend_url_from_config(OS.find_config_path())
+        le = CS().change_hardware_settings(cashbox_id, kkms, terminals, backend_url)
         db.set_legalentityid_in_products(le, True)
         OS.change_cashbox_service_state(False)
-        print(f"Ваши ККТ: {', '.join(kkt) }\nВаши терминалы: {', '.join(pos)}")
+        print(f"Ваши ККТ: {', '.join(kkms) }\nВаши терминалы: {', '.join(terminals)}")
         SUCCESS()
 
 class UseScanner(Command):

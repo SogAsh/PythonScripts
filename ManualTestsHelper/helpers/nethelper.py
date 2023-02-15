@@ -17,48 +17,48 @@ class CS():
         session.headers['Accept'] = "application/json"
         return session
 
-    def gen_token(self, cashboxId, backendUrl, attemptsNumber = 5):
+    def gen_token(self, cashbox_id, backend_url, attempts = 5):
         self.session.headers['Content-Type'] = "application/json"
-        url = backendUrl + self.V1_URL_TAIL + f"{cashboxId}/resetPassword"
-        for i in range(attemptsNumber):
+        url = backend_url + self.V1_URL_TAIL + f"{cashbox_id}/resetPassword"
+        for i in range(attempts):
             token = str(random.randrange(11111111, 99999999))
             data = json.dumps({"Token" : token})
             result = self.session.post(url, data = data)
-            print(f"Результат запроса {cashboxId}/resetPassword: {result}")
+            print(f"Результат запроса {cashbox_id}/resetPassword: {result}")
             if result.ok: 
                 pyperclip.copy(f"{token}")
                 break
 
-    def change_hardware_settings(self, cashboxId, kkt: list, pos: list, backendUrl):
-        settings = self.get_cashbox_settings_json(cashboxId, backendUrl)
-        legalEntities = self.get_legalentity_ids(settings, len(kkt) == 2)
+    def change_hardware_settings(self, cashbox_id, kkt: list, pos: list, backend_url):
+        settings = self.get_cashbox_settings_json(cashbox_id, backend_url)
+        legal_entities = self.get_legal_entity_ids(settings, len(kkt) == 2)
         le = []
-        for i in range (len(legalEntities)):
-            le.append(legalEntities[i]["legalEntityId"])
+        for i in range (len(legal_entities)):
+            le.append(legal_entities[i]["legalEntityId"])
 
-        settings["settings"]["backendSettings"]["legalEntities"] = legalEntities
-        backendSettings = {"settings" : settings["settings"]["backendSettings"]}
-        backendSettings["previousVersion"] = settings["versions"]["backendVersion"]
+        settings["settings"]["backendSettings"]["legalEntities"] = legal_entities
+        backend_settings = {"settings" : settings["settings"]["backendSettings"]}
+        backend_settings["previousVersion"] = settings["versions"]["backendVersion"]
 
         settings["settings"]["appSettings"]["hardwareSettings"]["kkmSettings"] = self.get_kkm_settings(kkt, le)
         settings["settings"]["appSettings"]["hardwareSettings"]["cardTerminalSettings"] = self.get_terminal_settings(pos, le)
-        appSettings = {"settings" : settings["settings"]["appSettings"]}
-        appSettings["previousVersion"] = settings["versions"]["appVersion"]
+        app_settings = {"settings" : settings["settings"]["appSettings"]}
+        app_settings["previousVersion"] = settings["versions"]["appVersion"]
 
-        self.post_cashbox_settings(cashboxId, backendSettings, backendUrl, True)
-        self.post_cashbox_settings(cashboxId, appSettings, backendUrl, False)
+        self.post_cashbox_settings(cashbox_id, backend_settings, backend_url, True)
+        self.post_cashbox_settings(cashbox_id, app_settings, backend_url, False)
         return le
 
-    def get_legalentity_ids(self, settings, twoLE : bool):
-        legalEntities = list(settings["settings"]["backendSettings"]["legalEntities"])
-        if (twoLE and len(legalEntities) == 1):
-            legalEntities.append({"legalEntityId": "d4ab40fe-cf40-4a5f-8636-32a1efbd66af", "inn": "992570272700","kpp": "", "name": "ИП"})
-        if (not twoLE):
-            legalEntities = [legalEntities[0]]
-        legalEntities[0]["inn"] = "6699000000"
-        if (len(legalEntities) == 2):
-            legalEntities[1]["inn"] = "992570272700"
-        return legalEntities
+    def get_legal_entity_ids(self, settings, two_UL : bool):
+        legal_entities = list(settings["settings"]["backendSettings"]["legalEntities"])
+        if (two_UL and len(legal_entities) == 1):
+            legal_entities.append({"legalEntityId": "d4ab40fe-cf40-4a5f-8636-32a1efbd66af", "inn": "992570272700","kpp": "", "name": "ИП"})
+        if (not two_UL):
+            legal_entities = [legal_entities[0]]
+        legal_entities[0]["inn"] = "6699000000"
+        if (len(legal_entities) == 2):
+            legal_entities[1]["inn"] = "992570272700"
+        return legal_entities
 
     def get_kkm_settings(self, kkt: list, le: list):
         result = []
@@ -76,15 +76,15 @@ class CS():
         response = self.session.get(backendUrl + self.V2_URL_TAIL + f'{cashboxId}/settings')
         return json.loads(response.content)
 
-    def post_cashbox_settings(self, cashboxId, settings, backendUrl, backend = True):
-        settingsType = "backend" if backend else "app"
+    def post_cashbox_settings(self, cashboxId, settings, backend_url, backend = True):
+        settings_type = "backend" if backend else "app"
         self.session.headers['Content-Type'] = "application/json"
-        result = self.session.post(backendUrl + self.V2_URL_TAIL + f"{cashboxId}/settings/" + f"{settingsType}", data = json.dumps(settings))
+        result = self.session.post(backend_url + self.V2_URL_TAIL + f"{cashboxId}/settings/" + f"{settings_type}", data = json.dumps(settings))
         print(result)
 
-    def flip_settings(self, settings, settingsName, settingsType = "backendSettings"):
-        settings["settings"][settingsType][settingsName] = not settings["settings"][settingsType][settingsName]
+    def flip_settings(self, settings, settings_name, settings_type = "backendSettings"):
+        settings["settings"][settings_type][settings_name] = not settings["settings"][settings_type][settings_name]
         result = {}
-        result["settings"] = settings["settings"][settingsType]
+        result["settings"] = settings["settings"][settings_type]
         result["previousVersion"] = settings["versions"]["backendVersion"]
         return result
