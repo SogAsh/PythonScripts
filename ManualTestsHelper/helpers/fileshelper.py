@@ -68,17 +68,22 @@ class Mark():
 class DB():
 
 
+    def __init__(self):
+        self.session = self.set_db_connection()
+        self.con = self.set_db_connection()
+        self.cur = self.con.cursor()
+
     def set_db_connection(self):
         return sqlite3.connect(os.path.join(OS.find_cashbox_path(), "db", "db.db"))
 
-    def update_products_with_pattern(self, cur : sqlite3.Cursor, products, legalEntityId, productNamePattern="", printName = False): 
+    def update_products_with_pattern(self, products, legalEntityId, productNamePattern="", printName = False): 
         noProductsSet = True 
         for row in products: 
             product = json.loads(row[2]) 
             if (productNamePattern in product["name"]): 
                 product["legalEntityId"] = legalEntityId 
                 try:
-                    cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {row[0]}") 
+                    self.cur.execute(f"UPDATE Product SET Content = '{json.dumps(product)}' WHERE Id == {row[0]}") 
                     if (printName):
                         print("Название товара для второго ЮЛ: " + product["name"])
                     noProductsSet = False 
@@ -87,62 +92,64 @@ class DB():
         return noProductsSet
 
     def set_legalentityid_in_products(self, le, finalQuery = False):
-        con = self.set_db_connection()
-        cur = con.cursor()
-        cur.execute("SELECT * FROM Product")
-        products = cur.fetchall()
+        self.cur.execute("SELECT * FROM Product")
+        products = self.cur.fetchall()
         if len(products) != 0:
-            self.update_products_with_pattern(cur, products, le[0], "")
+            self.update_products_with_pattern(products, le[0], "")
             if (len(le) > 1):
-                noProductsFor2UL = self.update_products_with_pattern(cur, products, le[1], "_2ЮЛ", True)
+                noProductsFor2UL = self.update_products_with_pattern(products, le[1], "_2ЮЛ", True)
                 if (noProductsFor2UL):
-                    self.update_products_with_pattern(cur, [products[0]], le[1], "", True)
-            con.commit()
+                    self.update_products_with_pattern([products[0]], le[1], "", True)
+            self.con.commit()
         if finalQuery:
-            con.close()
+            self.con.close()
 
-    def get_last_receipt(self, con : sqlite3.Connection, finalQuery = False):
-        cur = con.cursor()
+    def get_last_receipt(self, finalQuery = False):
+        cur = self.con.cursor()
         cur.execute("SELECT * FROM Receipt")
         result = cur.fetchall()[-1] #id, shiftid, number, content
         if finalQuery:
-            con.close()
+            self.con.close()
         return result
 
-    def update_receipt_content(self, con : sqlite3.Connection, content, id, finalQuery = False):
+    def update_receipt_content(self, content, id, finalQuery = False):
         query = f"UPDATE Receipt SET Content = '{content}' WHERE Id == '{id}'"
-        cur = con.cursor()
-        cur.execute(query)
-        con.commit()
+        self.cur.execute(query)
+        self.con.commit()
         if finalQuery: 
-            con.close()
+            self.con.close()
 
-    def get_cashbox_id(self):
-        con = self.set_db_connection()
-        cur = con.cursor()
-        cur.execute("select * FROM CashboxState")
-        cashboxId = cur.fetchall()[0][1]
-        con.close()
+    def get_cashbox_id(self, finalQuery = False):
+        self.cur.execute("select * FROM CashboxState")
+        cashboxId = self.cur.fetchall()[0][1]
         if cashboxId == None: 
             return OS.get_from_local_json("cashboxId")
         OS.cache_in_local_json("cashboxId", cashboxId)
+        if (finalQuery):
+            self.con.close()
         return cashboxId
 
-    def get_last_shift_from_db(self, con : sqlite3.Connection, finalQuery = False):
-        cur = con.cursor()
+    def get_last_shift_from_db(self, finalQuery = False):
+        cur = self.con.cursor()
         cur.execute("SELECT Content FROM shift WHERE Number == (SELECT Max(Number) FROM shift)")
         shift = cur.fetchone()[0] 
         if (finalQuery):
-            con.close()
+            self.con.close()
         return shift
 
-    def edit_shift_in_db(self, con : sqlite3.Connection, content : str, finalQuery = False):
-        cur = con.cursor()
+    def edit_shift_in_db(self, content : str, finalQuery = False):
+        cur = self.con.cursor()
         query = f"UPDATE shift SET Content = '{content}' WHERE Number == (SELECT MAX(Number) FROM shift)"
         cur.execute(query)
-        con.commit()
+        self.con.commit()
         if (finalQuery):
-            con.close()
+            self.con.close()
+    
+    def __del__(self):
+        try:
+            self.con.close()
+        except:
+            print("Объект БД уничтожен")
 
 class OS():
 

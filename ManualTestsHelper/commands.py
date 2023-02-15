@@ -108,7 +108,7 @@ class GetCashboxId(Command):
         return "В буфер обмена попадает текущий cashboxId - он достаётся из БД"
 
     def execute():
-        cashboxId = DB().get_cashbox_id()
+        cashboxId = DB().get_cashbox_id(True)
         pyperclip.copy(cashboxId)
         print(f"В вашем буфере обмена — текущий cashboxId: \n{cashboxId}")
         SUCCESS()
@@ -175,7 +175,7 @@ class GenToken(Command):
         return "Сгенерировать токен для кассы"
 
     def execute():
-        cashboxId = DB().get_cashbox_id()
+        cashboxId = DB().get_cashbox_id(True)
         backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
         cs = CS()
         cs.gen_token_CS(cs.start_session(), cashboxId, backendUrl)
@@ -218,10 +218,9 @@ class SetShiftDuration(Command):
             return
         duration_in_hours = int(params[0])
         db = DB()
-        con = db.set_db_connection()
-        shift = json.loads(db.get_last_shift_from_db(con))
+        shift = json.loads(db.get_last_shift_from_db())
         shift["openInfo"]["openDateTime"] = str(datetime.datetime.now() - datetime.timedelta(hours = duration_in_hours))
-        db.edit_shift_in_db(con, json.dumps(shift), True)
+        db.edit_shift_in_db(json.dumps(shift), True)
         print(f"Длительность текущей смены = {duration_in_hours}")
         SUCCESS()
 
@@ -237,12 +236,11 @@ class UnregLastReceipt(Command):
 
     def execute():
         db = DB()
-        con = db.set_db_connection()
-        (id, shiftId, number, content) = db.get_last_receipt(con)
+        (id, shiftId, number, content) = db.get_last_receipt()
         receipt = json.loads(content)
         receipt["kkmRegistrationStatus"] = "Error"
         receipt["correctionReceiptId"] = None
-        db.update_receipt_content(con, json.dumps(receipt), id, True)
+        db.update_receipt_content(json.dumps(receipt), id, True)
         print(f"Последний чек продажи стал незареганным. \nОн на сумму = {receipt['contributedSum']}")
         SUCCESS()
 
@@ -265,7 +263,7 @@ class FlipSettings(Command):
             FlipSettings.help(ERR("Неверное количество параметров"))
             return
         settings_name = params[0]
-        cashboxId = DB().get_cashbox_id()
+        cashboxId = DB().get_cashbox_id(True)
         cs = CS()
         session = cs.start_session()
         backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
