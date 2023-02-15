@@ -5,8 +5,7 @@ import uuid
 import sys
 import ctypes
 import json
-from helpers.fileshelper import Mark, DB, OS 
-from helpers.nethelper import CS
+from helpers.helper import DB, OS, CS, Mark
 import pyperclip
 import keyboard
 from console import fg, bg, fx
@@ -176,8 +175,7 @@ class GenToken(Command):
 
     def execute():
         cashbox_id = DB().get_cashbox_id(True)
-        backend_url = OS.get_backend_url_from_config(OS.find_config_path())
-        CS().gen_token(cashbox_id, backend_url)
+        CS().gen_token(cashbox_id)
         print(f"В вашем буфере обмена - новый токен для кассы: \n{cashbox_id}")
         SUCCESS()
 
@@ -264,10 +262,9 @@ class FlipSettings(Command):
         settings_name = params[0]
         cashbox_id = DB().get_cashbox_id(True)
         cs = CS()
-        backend_url = OS.get_backend_url_from_config(OS.find_config_path())
-        settings = cs.get_cashbox_settings_json(cashbox_id, backend_url)
+        settings = cs.get_cashbox_settings_json(cashbox_id)
         flipped_settings = cs.flip_settings(settings, settings_name)
-        cs.post_cashbox_settings(cashbox_id, flipped_settings, backend_url)
+        cs.post_cashbox_settings(cashbox_id, flipped_settings)
         print(f'Настройка {settings_name} теперь = {settings["settings"]["backendSettings"][settings_name]}')
         SUCCESS()
 
@@ -303,8 +300,7 @@ class SetHardwareSettings(Command):
             terminals.append(POS[terminal_positions[i]])
         db = DB()
         cashbox_id = db.get_cashbox_id()
-        backend_url = OS.get_backend_url_from_config(OS.find_config_path())
-        le = CS().change_hardware_settings(cashbox_id, kkms, terminals, backend_url)
+        le = CS().change_hardware_settings(cashbox_id, kkms, terminals)
         db.set_legalentityid_in_products(le, True)
         OS.change_cashbox_service_state(False)
         print(f"Ваши ККТ: {', '.join(kkms) }\nВаши терминалы: {', '.join(terminals)}")
