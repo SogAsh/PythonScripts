@@ -177,8 +177,7 @@ class GenToken(Command):
     def execute():
         cashboxId = DB().get_cashbox_id(True)
         backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
-        cs = CS()
-        cs.gen_token_CS(cs.start_session(), cashboxId, backendUrl)
+        CS().gen_token_CS(cashboxId, backendUrl)
         print(f"В вашем буфере обмена - новый токен для кассы: \n{cashboxId}")
         SUCCESS()
 
@@ -265,11 +264,10 @@ class FlipSettings(Command):
         settings_name = params[0]
         cashboxId = DB().get_cashbox_id(True)
         cs = CS()
-        session = cs.start_session()
         backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
-        settings = cs.get_cashbox_settings_json(session, cashboxId, backendUrl)
+        settings = cs.get_cashbox_settings_json(cashboxId, backendUrl)
         flippedSettings = cs.flip_settings_CS(settings, settings_name)
-        cs.post_cashbox_settings(session, cashboxId, flippedSettings, backendUrl)
+        cs.post_cashbox_settings(cashboxId, flippedSettings, backendUrl)
         print(f'Настройка {settings_name} теперь = {settings["settings"]["backendSettings"][settings_name]}')
         SUCCESS()
 
@@ -306,8 +304,7 @@ class SetHardwareSettings(Command):
         db = DB()
         cashboxId = db.get_cashbox_id()
         backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
-        cs = CS()
-        le = cs.change_hardware_settings(cs.start_session(), cashboxId, kkt, pos, backendUrl)
+        le = CS().change_hardware_settings(cashboxId, kkt, pos, backendUrl)
         db.set_legalentityid_in_products(le, True)
         OS.change_cashbox_service_state(False)
         print(f"Ваши ККТ: {', '.join(kkt) }\nВаши терминалы: {', '.join(pos)}")
