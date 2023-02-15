@@ -177,7 +177,7 @@ class GenToken(Command):
     def execute():
         cashboxId = DB().get_cashbox_id(True)
         backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
-        CS().gen_token_CS(cashboxId, backendUrl)
+        CS().gen_token(cashboxId, backendUrl)
         print(f"В вашем буфере обмена - новый токен для кассы: \n{cashboxId}")
         SUCCESS()
 
@@ -266,7 +266,7 @@ class FlipSettings(Command):
         cs = CS()
         backendUrl = OS.get_backend_url_from_config(OS.find_config_path())
         settings = cs.get_cashbox_settings_json(cashboxId, backendUrl)
-        flippedSettings = cs.flip_settings_CS(settings, settings_name)
+        flippedSettings = cs.flip_settings(settings, settings_name)
         cs.post_cashbox_settings(cashboxId, flippedSettings, backendUrl)
         print(f'Настройка {settings_name} теперь = {settings["settings"]["backendSettings"][settings_name]}')
         SUCCESS()
