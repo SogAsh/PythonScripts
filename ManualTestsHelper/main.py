@@ -5,36 +5,51 @@ from ini import *
 COMMANDS = [TurnOffCashbox, SetStage, GetCashboxId, CacheCashboxId, DeleteCashbox, GenToken, 
 GenGuid, SetShiftDuration, UnregLastReceipt, FlipSettings, SetHardwareSettings, UseScanner]
 COMMAND_NAMES = {command.name() : command for command in COMMANDS}
+HOTKEYS = [
+    ("alt+5", TurnOffCashbox, ["1"]),
+    ("alt+6", TurnOffCashbox, ["0"]),
+    ("alt+1", SetStage, ["1"]), 
+    ("alt+2", SetStage, ["2"]), 
+    ("alt+9", SetStage, ["9"]), 
+    ("alt+i", GetCashboxId, []),
+    ("alt+p", CacheCashboxId, []),
+    ("alt+d", DeleteCashbox, ["1", "0"]),
+    ("alt+c", DeleteCashbox, ["0", "1"]),
+    ("alt+shift+c", DeleteCashbox, ["1", "1"]),
+    ("alt+t", GenToken, []),
+    ("alt+g", GenGuid, []),
+    ("alt+-", SetShiftDuration, ["24"]),
+    ("alt+e", UnregLastReceipt, []),
+    ("alt+o", FlipSettings, ["moveRemainsToNextShift"]),
+    ("alt+a", FlipSettings, ["prepaidEnabled"]),
+    ("alt+k", SetHardwareSettings, []),
+    ("alt+s", UseScanner, ["normal"]),
+    ("alt+shift+s", UseScanner, ["quiet"])
+]
+
+HOTSTRINGS = {
+    "adm1" : "https://market.testkontur.ru/AdminTools",
+    "adm2" : "https://market-dev.testkontur.ru/AdminTools",
+    "csadm1" : "https://market.testkontur.ru/cashboxApi/admin/web/cashbox/",
+    "csadm2" : "https://market-dev.testkontur.ru/cashboxApi/admin/web/cashbox/",
+    "apidoc" : "https://developer.kontur.ru/"
+}
+
+def add_hotkey(key, command, params):
+    keyboard.add_hotkey(key, lambda: command.execute(*params))
+
+def add_hotstring(abbrev, phrase):
+    keyboard.add_abbreviation(abbrev, phrase)
 
 def main():
     print(YO("\nКассовых успехов!\n\n"))
     print("Выберите режим: \n1. Горячие клавиши \n2. Команды в консоли")
     if (input() == "1"):
         print(YO("\nГорячие клавиши готовы!\n\n"))
-        keyboard.add_hotkey("alt+5", lambda: TurnOffCashbox.execute("1"))
-        keyboard.add_hotkey("alt+6", lambda: TurnOffCashbox.execute("0"))
-        keyboard.add_hotkey("alt+1", lambda: SetStage.execute("1"))
-        keyboard.add_hotkey("alt+2", lambda: SetStage.execute("2"))
-        keyboard.add_hotkey("alt+9", lambda: SetStage.execute("9"))
-        keyboard.add_hotkey("alt+i", lambda: GetCashboxId.execute())
-        keyboard.add_hotkey("alt+p", lambda: CacheCashboxId.execute())
-        keyboard.add_hotkey("alt+d", lambda: DeleteCashbox.execute("1", "0"))
-        keyboard.add_hotkey("alt+c", lambda: DeleteCashbox.execute("0", "1"))
-        keyboard.add_hotkey("alt+shift+c", lambda: DeleteCashbox.execute("1", "1"))
-        keyboard.add_hotkey("alt+t", lambda: GenToken.execute())
-        keyboard.add_hotkey("alt+g", lambda: GenGuid.execute())
-        keyboard.add_hotkey("alt+-", lambda: SetShiftDuration.execute("24"))
-        keyboard.add_hotkey("alt+e", lambda: UnregLastReceipt.execute()) 
-        keyboard.add_hotkey("alt+o", lambda: FlipSettings.execute("moveRemainsToNextShift"))
-        keyboard.add_hotkey("alt+a", lambda: FlipSettings.execute("prepaidEnabled"))
-        keyboard.add_hotkey("alt+k", lambda: SetHardwareSettings.execute())   
-        keyboard.add_hotkey('alt+s', lambda: UseScanner.execute("normal"))
-        keyboard.add_hotkey('alt+shift+s', lambda: UseScanner.execute("quiet"))
-        keyboard.add_abbreviation('adm1', 'https://market.testkontur.ru/AdminTools')
-        keyboard.add_abbreviation('adm2', 'https://market-dev.testkontur.ru/AdminTools')
-        keyboard.add_abbreviation('csadm1', 'https://market.testkontur.ru/cashboxApi/admin/web/cashbox/')
-        keyboard.add_abbreviation('csadm2', 'https://market-dev.testkontur.ru/cashboxApi/admin/web/cashbox/')
-        keyboard.add_abbreviation('apidoc', 'https://developer.kontur.ru/')
+        for key, command, params in HOTKEYS:
+            add_hotkey(key, command, params)
+        for abbrev, phrase in HOTSTRINGS.items():
+            add_hotstring(abbrev, phrase)
         keyboard.wait("alt+esc")
     else:
         print(YO("\nКонсольные команды ждут вас!\n\n"))        
@@ -54,5 +69,6 @@ def main():
                 command.execute(*res[1:])
             except KeyError:
                 print(ERR("\nКоманда не найдена\n\n"))
+
 if __name__ == "__main__":
     main()
