@@ -1,6 +1,9 @@
 import json
 import sys
 import subprocess
+import os
+
+PATH = os.path.dirname(__file__)
 
 def getDataForJson():
     data = {}
@@ -11,8 +14,16 @@ def getDataForJson():
     data["barcode"] = "2100000000463"
     return json.dumps(data, indent=4)
 
-with open("data.json", "w") as file:
+try: 
+    requirements = os.path.join(PATH, "requirements.txt")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", f"{requirements}"])
+except:
+    print("\n\nНе удалось установить библиотеки.\n\nВозможно, неправильно установлен питон")
+    input()
+
+with open(os.path.join(PATH, "data.json"), "w") as file:
     data = getDataForJson()
     file.write(data) 
 
-subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+print("\n\nБиблиотеки установлены, файл data.json создан успешно. \nОкно можно закрыть")
+input()
