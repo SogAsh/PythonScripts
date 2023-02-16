@@ -1,4 +1,6 @@
 import json
+import sys
+import subprocess
 
 def getDataForJson():
     data = {}
@@ -12,3 +14,5 @@ def getDataForJson():
 with open("data.json", "w") as file:
     data = getDataForJson()
     file.write(data) 
+
+subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
