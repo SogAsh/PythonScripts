@@ -2,9 +2,6 @@ import keyboard
 from commands import *
 from ini import *
 
-if (should_init()):
-    init()
-
 COMMANDS = [TurnOffCashbox, SetStage, GetCashboxId, CacheCashboxId, DeleteCashbox, GenToken, 
 GenGuid, SetShiftDuration, UnregLastReceipt, FlipSettings, SetHardwareSettings, UseScanner]
 COMMAND_NAMES = {command.name() : command for command in COMMANDS}

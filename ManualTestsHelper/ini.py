@@ -13,13 +13,9 @@ def init():
         print("\n\nНе удалось установить библиотеки.\n\nВозможно, неправильно установлен питон")
         input()
         return
-
     with open(os.path.join(PATH, "data.json"), "w") as file:
-        data = fill_initial_json()
-        file.write(data) 
-
+        file.write(fill_initial_json()) 
     print("\n\nБиблиотеки установлены, файл data.json создан успешно")
-    input()
 
 def should_init():
     json_path = os.path.join(PATH, "data.json")
@@ -39,3 +35,6 @@ def fill_initial_json():
     data["barcode"] = "2100000000463"
     data["initialized"] = "True"
     return json.dumps(data, indent=4)
+
+if (should_init()):
+    init()
