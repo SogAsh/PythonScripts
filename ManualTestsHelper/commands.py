@@ -83,8 +83,11 @@ class SetStage(Command):
         if (params[0] not in ["0", "1", "9"]):
             SetStage.help(ERR("Неверный аргумент"))
             return
+
         stage = params[0]
-        OS.set_staging(int(stage))
+        OS.change_cashbox_service_state(True)
+        OS.change_staging_in_config(int(stage), OS.find_config_path())
+        OS.change_cashbox_service_state(False)
         print(f"Касса готова к работе с {stage + ' стейджем' if stage != '9' else ' продом'}")
         SUCCESS() 
 

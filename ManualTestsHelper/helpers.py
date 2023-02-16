@@ -9,12 +9,51 @@ import pyperclip
 import random
 import string
 import requests
+from console import fg, bg, fx
+
+ERR = bg.lightred + fg.black
 
 class Mark():
 
 
     ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"%&'*+-./_,:;=<>?"
     
+    def paste_mark_in_scanner_mode(product_type, buffer_mode: bool, quiet_mode: bool):
+        mark = Mark.get_mark(product_type, buffer_mode, quiet_mode)
+        if not quiet_mode:
+            keyboard.press_and_release("alt + tab")
+        time.sleep(1)
+        for i in range(len(mark)):
+            keyboard.write(mark[i])
+            time.sleep(0.01)
+
+    def get_mark(product_type, buffer_mode: bool, quiet_mode: bool):
+        mark = ""
+        if quiet_mode:
+            mark = OS.get_from_local_json("lastMark")
+        elif buffer_mode:
+            mark = pyperclip.paste()
+        else:
+            barcode = OS.get_from_local_json("barcode") 
+            if product_type == "Tabak": 
+                print("Какой нужен МРЦ в копейках?") 
+                price = int(input().strip()) 
+                mark = "0" + barcode + "-UWzSA8" + Mark.encode_price_for_mark(price) + OS.gen_random_string(5)
+            elif product_type == "Cis":
+                mark = "010" + barcode + "21" + OS.gen_random_string(13) + "93" +  OS.gen_random_string(13)
+            elif product_type == "Milk":
+                mark = "010" + barcode + "21" + OS.gen_random_string(8) + "93" + OS.gen_random_string(4)
+            else:  
+                mark = Mark.get_mark_from_file(product_type) 
+        OS.cache_in_local_json("lastMark", mark)
+        return mark
+
+    def get_mark_from_file(product_type):
+        path = os.path.join(os.path.dirname(__file__), "marks", product_type + ".txt")
+        with open(path, "r") as file:
+            lines = file.readlines()
+            return lines[random.randrange(len(lines))].strip()
+
     def encode_price_for_mark(price): 
         positions = [] 
         while(True): 
@@ -30,52 +69,19 @@ class Mark():
             res += Mark.ALPHABET[positions[number]] 
         return res
 
-    def get_mark_from_file(product_type):
-        path = os.path.join(os.path.dirname(__file__), "marks", product_type + ".txt")
-        with open(path, "r") as file:
-            lines = file.readlines()
-            return lines[random.randrange(len(lines))].strip()
-
-    def paste_mark_in_scanner_mode(product_type, buffer_mode: bool, quiet_mode: bool):
-        mark = ""
-        if quiet_mode:
-            mark = OS.get_from_local_json("lastMark")
-        elif buffer_mode:
-            mark = pyperclip.paste()
-        else:  
-            barcode = ""
-            try:
-                barcode = OS.get_from_local_json("barcode") 
-            except: 
-                barcode = "2100000000463"
-            if product_type == "Tabak": 
-                print("Какой нужен МРЦ в копейках?") 
-                price = int(input().strip()) 
-                mark = "0" + barcode + "-UWzSA8" + Mark.encode_price_for_mark(price) + OS.gen_random_string(5)
-            elif product_type == "Cis":
-                mark = "010" + barcode + "21" + OS.gen_random_string(13) + "93" +  OS.gen_random_string(13)
-            elif product_type == "Milk":
-                mark = "010" + barcode + "21" + OS.gen_random_string(8) + "93" + OS.gen_random_string(4)
-            else:  
-                mark = Mark.get_mark_from_file(product_type) 
-        OS.cache_in_local_json("lastMark", mark)
-        if not quiet_mode:
-            keyboard.press_and_release("alt + tab")
-        time.sleep(1)
-        for i in range(len(mark)):
-            keyboard.write(mark[i])
-            time.sleep(0.01)
-
 class DB():
 
 
     def __init__(self):
-        self.session = self.set_db_connection()
         self.con = self.set_db_connection()
         self.cur = self.con.cursor()
 
     def set_db_connection(self):
-        return sqlite3.connect(os.path.join(OS.find_cashbox_path(), "db", "db.db"))
+        try: 
+            return sqlite3.connect(os.path.join(OS.find_cashbox_path(), "db", "db.db"))
+        except:
+            print(ERR("\n\nНе удалось установить соединение с БД\n\n")) 
+            input()
 
     def update_products_with_pattern(self, products, legalEntityId, pattern="", should_print_name = False): 
         no_products_set = True 
@@ -154,13 +160,21 @@ class DB():
 
 class OS():
 
+    @staticmethod
+    def change_cashbox_service_state(should_stop):
+        try:
+            subprocess.call(['sc', f'{"stop" if should_stop else "start"}', 'SKBKontur.Cashbox'])
+            time.sleep(1 if should_stop else 4)
+            return True
+        except:
+            return False
 
     @staticmethod
     def close_sqlite(): 
         try:
             subprocess.call(["taskkill", "/f", "/im", "DB Browser for SQLite.exe"])
         except:
-            pass
+            print("Не удалось закрыть SQLite")
 
     @staticmethod
     def delete_folder(file_path):
@@ -168,32 +182,35 @@ class OS():
         try:
             shutil.rmtree(file_path)
         except:
-            print(f"Не удалось удалить папку с адресом:\n{file_path}")
+            print(ERR("\n\nНе удалось удалить папку\n\n"))
+            print(f"Адрес папки: {file_path}")
 
     @staticmethod
     def find_cashbox_path():
-        for path in OS.get_programfiles_paths():
-            dir = OS.find_child_dir_path(path, "SKBKontur")
-            if dir != "":
-                cashbox_path = os.path.join(path, "SKBKontur", "Cashbox")   
-        return cashbox_path
+        program_files_dirs = []
+        for disk_drive in OS.get_from_local_json("diskDrives"):
+            program_files_dirs.append(os.path.join(disk_drive, "Program Files"))
+            program_files_dirs.append(os.path.join(disk_drive, "Program Files (x86)"))
+        for path in program_files_dirs:
+            kontur_path = os.path.join(path, "SKBKontur")
+            if os.path.exists(kontur_path):
+                return os.path.join(kontur_path, "Cashbox")
+        print(f"Не удалось найти папку Cashbox на жёстких дисках {OS.get_from_local_json('diskDrives')}")
+        input()
+        return ""
 
     @staticmethod
     def find_config_path():
         cashbox = OS.find_cashbox_path()
         bin = os.path.join(cashbox, "bin")
+        config_path = ""
         for root, dirs, files in os.walk(bin):
             config_path = os.path.join(root, dirs[0], "cashboxService.config.json")
             break
-        assert config_path != "", "Can't find config path"
+        if config_path == "": 
+            print("Не удалось найти файл конфига")
         OS.cache_in_local_json("configPath", config_path)
         return config_path
-
-    @staticmethod
-    def set_staging(stage):
-        OS.change_cashbox_service_state(True)
-        OS.change_staging_in_config(stage, OS.find_config_path())
-        OS.change_cashbox_service_state(False)
 
     @staticmethod
     def get_backend_url_from_config(config_path):
@@ -204,8 +221,7 @@ class OS():
     @staticmethod
     def change_staging_in_config(stage, config_path):
         with open(config_path, "r+") as file:
-            raw = file.read()
-            data = json.loads(raw)
+            data = json.loads(file.read())
             if stage == 2:
                 data["settings"][0]["loyaltyCashboxClientUrl"] = "https://market-dev.testkontur.ru/loyaltyCashboxApi"
                 data["settings"][0]["cashboxBackendUrl"] = "https://market-dev.testkontur.ru"
@@ -220,31 +236,6 @@ class OS():
             file.seek(0)
             file.write(newJson)
             file.truncate()   
-
-    @staticmethod
-    def change_cashbox_service_state(should_stop):
-        try:
-            subprocess.call(['sc', f'{"stop" if should_stop else "start"}', 'SKBKontur.Cashbox'])
-            time.sleep(1 if should_stop else 4)
-            return True
-        except:
-            return False
-
-    @staticmethod
-    def find_child_dir_path(path, dir):
-        for root, dirs, files in os.walk(path):
-            if (dir in dirs):
-                return os.path.join(root, dir)
-            break 
-        return "" 
-
-    @staticmethod
-    def get_programfiles_paths():
-        paths = []
-        for disk_drive in OS.get_from_local_json("diskDrives"):
-            paths.append(os.path.join(disk_drive, "Program Files"))
-            paths.append(os.path.join(disk_drive, "Program Files (x86)"))
-        return paths
 
     @staticmethod
     def cache_in_local_json(key, value):
