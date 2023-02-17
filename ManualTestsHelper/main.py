@@ -1,3 +1,7 @@
+import ctypes
+from elevate import *
+if not ctypes.windll.shell32.IsUserAnAdmin(): 
+    elevate()
 from ini import *
 import keyboard
 from commands import *

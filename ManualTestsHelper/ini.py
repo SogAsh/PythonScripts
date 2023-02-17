@@ -16,6 +16,8 @@ def init():
     with open(os.path.join(PATH, "data.json"), "w") as file:
         file.write(fill_initial_json()) 
     print("\n\nБиблиотеки установлены, файл data.json создан успешно")
+    print("Нажмите любую кнопку для продолжения")
+    input()
 
 def should_init():
     json_path = os.path.join(PATH, "data.json")
