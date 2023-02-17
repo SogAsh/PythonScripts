@@ -37,6 +37,3 @@ def fill_initial_json():
     data["barcode"] = "2100000000463"
     data["initialized"] = "True"
     return json.dumps(data, indent=4)
-
-if (should_init()):
-    init()

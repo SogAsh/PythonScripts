@@ -1,5 +1,4 @@
 import ctypes
-from elevate import *
 from ini import *
 import keyboard
 from commands import *
@@ -74,9 +73,8 @@ def main():
 
 if __name__ == "__main__":
     if not ctypes.windll.shell32.IsUserAnAdmin(): 
-        elevate()
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)        
+        exit() 
     if (should_init()):
         init()
     main()
-
-
