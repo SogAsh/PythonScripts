@@ -5,6 +5,7 @@ import json
 from helpers import OS, CS, Mark, DB
 import pyperclip
 from console import fg, bg, fx
+from abc import ABC, abstractmethod
 
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
@@ -14,24 +15,28 @@ YO = bg.green + fg.black
 SUCCESS = lambda: print(YO("\nСкрипт завершился успешно\n\n"))
 file_change_style = fg.lightblack + fx.italic
 
-class Command:
-
-
+class Command(ABC): 
+ 
     @staticmethod
-    def name():
-        raise NotImplementedError()
-
+    @abstractmethod 
+    def name(): 
+        pass 
+ 
     @staticmethod
-    def description():
-        raise NotImplementedError()
-
+    @abstractmethod 
+    def description(): 
+        pass 
+ 
     @staticmethod
-    def help():
-        raise NotImplementedError()
-
+    @abstractmethod 
+    def help(): 
+        pass 
+ 
     @staticmethod
-    def execute():
-        raise NotImplementedError()
+    @abstractmethod 
+    def execute(): 
+        pass
+     
 
 class TurnOffCashbox(Command):
 
@@ -40,13 +45,16 @@ class TurnOffCashbox(Command):
     def name():
         return "turn"  
 
+    @staticmethod
     def description():
         return "Отключает (1) или включает (0) службу кассы"
 
+    @staticmethod
     def help(message = ""):
         print(message + "\n" + f"У команды '{TurnOffCashbox.name()}' один аргумент: " 
         + "1 - остановить службу, 0 - запустить")
 
+    @staticmethod
     def execute(*params):
         if (len(params) != 1):
             TurnOffCashbox.help(ERR("Неверное количество параметров"))
@@ -69,13 +77,16 @@ class SetStage(Command):
     def name():
         return "stage"
 
+    @staticmethod
     def description():
         return "Выбор стейджа для кассы: 1 или 2"
 
+    @staticmethod
     def help(message):
         print(message + "\n" + f"У команды '{SetStage.name()}' один аргумент: " 
         + "1 - первый стейдж, 2 - второй, 9 - прод")
 
+    @staticmethod
     def execute(*params):
         if (len(params) != 1):
             SetStage.help(ERR("Неверное количество параметров"))
@@ -98,12 +109,16 @@ class GetCashboxId(Command):
     def name():
         return "getid"
 
+    @staticmethod
     def description():
         return "Скопировать текущий cashboxId в буфер"
 
-    def help():
-        return "В буфер обмена попадает текущий cashboxId - он достаётся из БД"
+    @staticmethod
+    def help(message = ""):
+        print(message + "\n" + f"У команды '{GetCashboxId.name()}' нет аргументов:\n" 
+        + "Текущий cashboxId попадает в буфер из локальной БД")
 
+    @staticmethod
     def execute():
         cashbox_id = DB().get_cashbox_id(True)
         pyperclip.copy(cashbox_id)
@@ -117,9 +132,16 @@ class CacheCashboxId(Command):
     def name():
         return "setid"
 
+    @staticmethod
     def description():
         return "Вставить cashboxId из буфера в data.json"
 
+    @staticmethod
+    def help(message = ""):
+        print(message + "\n" + f"У команды '{CacheCashboxId.name()}' нет аргументов:\n" 
+        + "CashboxId вставлется из буфера обмена")
+
+    @staticmethod
     def execute():
         cashbox_id = pyperclip.paste()
         OS.cache_in_local_json("cashboxId", cashbox_id)
@@ -133,13 +155,16 @@ class DeleteCashbox(Command):
     def name():
         return "del"
 
+    @staticmethod
     def description():
         return "Удалить кассу (0 1) или БД (1 0)"
 
+    @staticmethod
     def help(message):
         print(message + "\n" + f"У команды '{DeleteCashbox.name()}' два аргумента: " 
         + "1. 1 - удалить БД, 0 - не удалять \n 2. 1 - удалить КМК, 0 - не удалять")
 
+    @staticmethod
     def execute(*params):
         if (len(params) != 2):
             DeleteCashbox.help(ERR("Неверное количество параметров"))
@@ -168,9 +193,16 @@ class GenToken(Command):
     def name():
         return "token"
 
+    @staticmethod
     def description():
         return "Сгенерировать токен для кассы"
 
+    @staticmethod
+    def help(message = ""):
+        print(message + "\n" + f"У команды '{GenToken.name()}' нет аргументов:\n" 
+        + "СashboxId для запроса на КС берётся из локальной базы")
+
+    @staticmethod
     def execute():
         cashbox_id = DB().get_cashbox_id(True)
         CS().gen_token(cashbox_id)
@@ -184,9 +216,16 @@ class GenGuid(Command):
     def name():
         return "guid"
 
+    @staticmethod
     def description():
         return "Сгенерировать произвольный гуид"
 
+    @staticmethod
+    def help(message = ""):
+        print(message + "\n" + f"У команды '{GenGuid.name()}' нет аргументов:\n" 
+        + "это нехитрая команда")
+
+    @staticmethod
     def execute():
         guid = str(uuid.uuid4())
         pyperclip.copy(guid)
@@ -200,13 +239,16 @@ class SetShiftDuration(Command):
     def name():
         return "shift"
 
+    @staticmethod
     def description():
         return "Установить длительность смены в часах"
 
+    @staticmethod
     def help(message):
         print(message + "\n" + f"У команды '{SetShiftDuration.name()}' один аргумент: " 
         + "желаемое количество часов в смене")
 
+    @staticmethod
     def execute(*params):
         if (len(params) != 1):
             SetShiftDuration.help(ERR("Неверное количество параметров"))
@@ -226,9 +268,16 @@ class UnregLastReceipt(Command):
     def name():
         return "unreg"
 
+    @staticmethod
     def description():
         return "Сделать последнему чеку статус = Error"
 
+    @staticmethod
+    def help(message = ""):
+        print(message + "\n" + f"У команды '{UnregLastReceipt.name()}' нет аргументов:\n" 
+        + "Незарегистрированным становится последний чек")
+
+    @staticmethod
     def execute():
         db = DB()
         (id, shiftId, number, content) = db.get_last_receipt()
@@ -246,13 +295,16 @@ class FlipSettings(Command):
     def name():
         return "settings"
 
+    @staticmethod
     def description():
         return "Изменить буллевую настройку"
 
+    @staticmethod
     def help(message):
         print(message + "\n" + f"У команды '{FlipSettings.name()}' один аргумент: " 
         + "название настройки. Например, moveRemainsToNextShift или prepaidEnabled")
 
+    @staticmethod
     def execute(*params):
         if (len(params) != 1):
             FlipSettings.help(ERR("Неверное количество параметров"))
@@ -273,9 +325,16 @@ class SetHardwareSettings(Command):
     def name():
         return "kkms"
 
+    @staticmethod
     def description():
         return "Выбрать 1-2 ККТ и терминала"
 
+    @staticmethod
+    def help(message = ""):
+        print(message + "\n" + f"У команды '{SetHardwareSettings.name()}' нет аргументов:\n" 
+        + "Выбор техники происходит в консоли")
+
+    @staticmethod
     def execute():
         print("""Выберите 1 или 2 ККТ: первая для ЮЛ с ИНН = 6699000000, вторая - для ЮЛ с ИНН = 992570272700
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
@@ -311,13 +370,16 @@ class UseScanner(Command):
     def name():
         return "scanner"
 
+    @staticmethod
     def description():
         return "Вставить марки виртуальным сканером"
 
+    @staticmethod
     def help(message = ""):
         print(message + "\n" + f"У команды '{UseScanner.name()}' один аргумент: " 
         + "normal - выбор марки, quiet - вставка прошлой марки")
-        
+
+    @staticmethod       
     def execute(*params):
         if (len(params) != 1):
             UseScanner.help(ERR("Неверное количество параметров"))

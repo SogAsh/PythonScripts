@@ -3,6 +3,9 @@ from ini import *
 import keyboard
 from commands import *
 
+naaa = TurnOffCashbox().name()
+
+
 COMMANDS = [TurnOffCashbox, SetStage, GetCashboxId, CacheCashboxId, DeleteCashbox, GenToken, 
 GenGuid, SetShiftDuration, UnregLastReceipt, FlipSettings, SetHardwareSettings, UseScanner]
 COMMAND_NAMES = {command.name() : command for command in COMMANDS}
