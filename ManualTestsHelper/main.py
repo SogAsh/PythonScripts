@@ -1,6 +1,6 @@
+from ini import *
 import keyboard
 from commands import *
-from ini import *
 
 COMMANDS = [TurnOffCashbox, SetStage, GetCashboxId, CacheCashboxId, DeleteCashbox, GenToken, 
 GenGuid, SetShiftDuration, UnregLastReceipt, FlipSettings, SetHardwareSettings, UseScanner]
