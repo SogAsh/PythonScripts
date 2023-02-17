@@ -1,7 +1,5 @@
 import ctypes
 from elevate import *
-if not ctypes.windll.shell32.IsUserAnAdmin(): 
-    elevate()
 from ini import *
 import keyboard
 from commands import *
@@ -75,4 +73,10 @@ def main():
                 print(ERR("\nКоманда не найдена\n\n"))
 
 if __name__ == "__main__":
+    if not ctypes.windll.shell32.IsUserAnAdmin(): 
+        elevate()
+    if (should_init()):
+        init()
     main()
+
+
