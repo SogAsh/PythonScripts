@@ -32,13 +32,13 @@ HOTKEYS = [
 
 HOTKEY_NAMES = [(a, b.description(), " ".join(c)) for a, b, c in HOTKEYS]
 
-HOTSTRINGS = {
-    "adm1" : "https://market.testkontur.ru/AdminTools",
-    "adm2" : "https://market-dev.testkontur.ru/AdminTools",
-    "csadm1" : "https://market.testkontur.ru/cashboxApi/admin/web/cashbox/",
-    "csadm2" : "https://market-dev.testkontur.ru/cashboxApi/admin/web/cashbox/",
-    "apidoc" : "https://developer.kontur.ru/"
-}
+HOTSTRINGS = [
+    ("adm1", "Админка Маркета-1", "https://market.testkontur.ru/AdminTools"),
+    ("adm2", "Админка Маркета-2", "https://market-dev.testkontur.ru/AdminTools"),
+    ("csadm1", "Админка КС-1", "https://market.testkontur.ru/cashboxApi/admin/web/cashbox/"),
+    ("csadm2", "Админка КС-2", "https://market-dev.testkontur.ru/cashboxApi/admin/web/cashbox/"),
+    ("apidoc", "Документация", "https://developer.kontur.ru/")
+]
 
 def main():
     print(YO("\nКассовых успехов!\n\n"))
@@ -47,8 +47,8 @@ def main():
         print(YO("\nГорячие клавиши готовы!\n\n"))
         for key, command, params in HOTKEYS:
             add_hotkey(key, command, params)
-        for abbrev, phrase in HOTSTRINGS.items():
-            add_hotstring(abbrev, phrase)
+        for key, _, value in HOTSTRINGS:
+            add_hotstring(key, value)
         keyboard.add_hotkey("alt+h", lambda: print_hotkeys())
         print_hotkeys()
         keyboard.wait("alt+esc")
@@ -76,9 +76,18 @@ def add_hotstring(abbrev, phrase):
 def print_hotkeys():
     format = "{0:<8} \t{1:<40} \t{2:20}"
     print(format.format("Комбо", "Описание команды", "Аргументы"))
-    for a, b, c in HOTKEY_NAMES:
-        print(format.format(f"{a}", f"{b}",f"{c}"))
+    for key, description, args in HOTKEY_NAMES:
+        print(format.format(key, description, args))
     print(format.format(f"alt+h", f"Вывести список горячих клавиш в консоль", ""))
+    print_hotstrings()
+
+
+def print_hotstrings():
+    format = "{0:<15} \t{1:<7} \t{2:40}"
+    print("\n\nА для автозамены введите ключ куда угодно и поставьте пробел:\n")
+    print(format.format("Что это","Ключ", "Результат замены"))
+    for key, description, value in HOTSTRINGS:
+        print(format.format(description, key, value))
     print("\n")
 
 def print_commands():
