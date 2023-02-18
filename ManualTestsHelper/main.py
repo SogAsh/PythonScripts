@@ -31,6 +31,8 @@ HOTKEYS = [
     ("alt+shift+s", UseScanner, ["quiet"])
 ]
 
+HOTKEY_NAMES = [(a, b.description(), " ".join(c)) for a, b, c in HOTKEYS]
+
 HOTSTRINGS = {
     "adm1" : "https://market.testkontur.ru/AdminTools",
     "adm2" : "https://market-dev.testkontur.ru/AdminTools",
@@ -54,6 +56,8 @@ def main():
             add_hotkey(key, command, params)
         for abbrev, phrase in HOTSTRINGS.items():
             add_hotstring(abbrev, phrase)
+        keyboard.add_hotkey("alt+h", lambda: print_hotkeys())
+        print_hotkeys()
         keyboard.wait("alt+esc")
     else:
         print(YO("\nКонсольные команды ждут вас!\n\n"))        
@@ -73,6 +77,14 @@ def main():
                 command.execute(*res[1:])
             except KeyError:
                 print(ERR("\nКоманда не найдена\n\n"))
+
+def print_hotkeys():
+    format = "{0:<8} \t{1:<40} \t{2:20}"
+    print(format.format(f"Комбо", f"Описание команды", "Аргументы"))
+    for a, b, c in HOTKEY_NAMES:
+        print(format.format(f"{a}", f"{b}",f"{c}"))
+    print(format.format(f"alt+h", f"Вывести список горячих клавиш в консоль", ""))
+    print("\n")
 
 if __name__ == "__main__":
     if not ctypes.windll.shell32.IsUserAnAdmin(): 
