@@ -3,12 +3,11 @@ from ini import *
 import keyboard
 from commands import *
 
-naaa = TurnOffCashbox().name()
-
-
 COMMANDS = [TurnOffCashbox, SetStage, GetCashboxId, CacheCashboxId, DeleteCashbox, GenToken, 
 GenGuid, SetShiftDuration, UnregLastReceipt, FlipSettings, SetHardwareSettings, UseScanner]
+
 COMMAND_NAMES = {command.name() : command for command in COMMANDS}
+
 HOTKEYS = [
     ("alt+5", TurnOffCashbox, ["1"]),
     ("alt+6", TurnOffCashbox, ["0"]),
@@ -41,12 +40,6 @@ HOTSTRINGS = {
     "apidoc" : "https://developer.kontur.ru/"
 }
 
-def add_hotkey(key, command, params):
-    keyboard.add_hotkey(key, lambda: command.execute(*params))
-
-def add_hotstring(abbrev, phrase):
-    keyboard.add_abbreviation(abbrev, phrase)
-
 def main():
     print(YO("\nКассовых успехов!\n\n"))
     print("Выберите режим: \n1. Горячие клавиши \n2. Команды в консоли")
@@ -62,11 +55,7 @@ def main():
     else:
         print(YO("\nКонсольные команды ждут вас!\n\n"))        
         while(True):
-            print("Список команд: \n")
-            for command in COMMANDS:
-                print("{0:>8} \t{1:<40}".format(f"{command.name()}", f"{command.description()}"))
-            print("{0:>8} \t{1:<40}".format("exit", "Выйти в меню скриптов"))
-            print("\n ")            
+            print_commands()
             res = input().strip().split()
             cmd = res[0]
             if cmd == "exit":
@@ -78,13 +67,27 @@ def main():
             except KeyError:
                 print(ERR("\nКоманда не найдена\n\n"))
 
+def add_hotkey(key, command, params):
+    keyboard.add_hotkey(key, lambda: command.execute(*params))
+
+def add_hotstring(abbrev, phrase):
+    keyboard.add_abbreviation(abbrev, phrase)
+
 def print_hotkeys():
     format = "{0:<8} \t{1:<40} \t{2:20}"
-    print(format.format(f"Комбо", f"Описание команды", "Аргументы"))
+    print(format.format("Комбо", "Описание команды", "Аргументы"))
     for a, b, c in HOTKEY_NAMES:
         print(format.format(f"{a}", f"{b}",f"{c}"))
     print(format.format(f"alt+h", f"Вывести список горячих клавиш в консоль", ""))
     print("\n")
+
+def print_commands():
+    format = "{0:<8} \t{1:<40}"
+    print(format.format("Команда", "Описание"))
+    for command in COMMANDS:
+        print(format.format(f"{command.name()}", f"{command.description()}"))
+    print(format.format("exit", "Выйти в меню скриптов"))
+    print("\n ") 
 
 if __name__ == "__main__":
     if not ctypes.windll.shell32.IsUserAnAdmin(): 
