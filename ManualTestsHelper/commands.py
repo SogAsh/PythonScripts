@@ -2,7 +2,7 @@ import os
 import datetime
 import uuid
 import json
-from helpers import OS, CS, Mark, DB
+from helpers import OS, CS, Mark, DB, Mode
 import pyperclip
 from console import fg, bg, fx
 from abc import ABC, abstractmethod
@@ -11,11 +11,14 @@ import string
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
 MARKTYPES = ["Excise", "Tabak", "Cis", "Milk"]
+
 ERR = bg.lightred + fg.black
 YO = bg.green + fg.black
 ERROR = lambda: print(ERR("\nПри выполнении скрипта возникла ошибка\n\n"))
 SUCCESS = lambda: print(YO("\nСкрипт завершился успешно\n\n"))
-file_change_style = fg.lightblack + fx.italic
+
+
+# file_change_style = fg.lightblack + fx.italic
 
 class Command(ABC): 
  
@@ -426,18 +429,20 @@ class UseScanner(Command):
             UseScanner.help(ERR("Неверный аргумент"))
             return
         if params[0] == "quiet":
-            Mark.paste_mark_in_scanner_mode("", False, True)
+            Mark.paste_mark_in_scanner_mode("", Mode.QUIET)
         else:
-            #TO DO: сделать enum
-            print("Какую марку вставить? Введите число:\n\n0. Из буфера\n1. Акцизную\n2. Сигарет\n 3. Шин, духов, одежды, обуви, фото, воды\n 4. Молока")
+            print("Какую марку вставить? Введите число:\n\n0. Из буфера\n1. Акцизную\n2. Сигарет\n3. Шин, духов, одежды, обуви, фото, воды\n4. Молока")
             number = input().strip()
             if number not in string.digits:
                 print(ERR("Вы ввели не число"))
                 return
             number = int(number)
+            if number > len(Mode):
+                print("\n" + ERR("Неверное число") + "\n")
+                return
             if number == 0:
-                Mark.paste_mark_in_scanner_mode("", True, False)
+                Mark.paste_mark_in_scanner_mode("", Mode.CLIPBOARD)
             else: 
-                Mark.paste_mark_in_scanner_mode(MARKTYPES[number - 1], False, False)
+                Mark.paste_mark_in_scanner_mode(MARKTYPES[number - 1], Mode.NORMAL)
         print("Код марки успешно введен в режиме сканера")
         SUCCESS()

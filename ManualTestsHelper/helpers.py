@@ -10,28 +10,35 @@ import random
 import string
 import requests
 from console import fg, bg, fx
+from enum import Enum
 
 ERR = bg.lightred + fg.black
 
+class Mode(Enum):
+    NORMAL = 1, 
+    CLIPBOARD = 2, 
+    FILE = 3, 
+    QUIET = 4
+
 class Mark():
-
-
+      
+    
     ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"%&'*+-./_,:;=<>?"
     
-    def paste_mark_in_scanner_mode(product_type, buffer_mode: bool, quiet_mode: bool):
-        mark = Mark.get_mark(product_type, buffer_mode, quiet_mode)
-        if not quiet_mode:
+    def paste_mark_in_scanner_mode(product_type, mode: Mode):
+        mark = Mark.get_mark(product_type, mode)
+        if mode != Mode.QUIET:
             keyboard.press_and_release("alt + tab")
         time.sleep(1)
         for i in range(len(mark)):
             keyboard.write(mark[i])
             time.sleep(0.01)
 
-    def get_mark(product_type, buffer_mode: bool, quiet_mode: bool):
+    def get_mark(product_type, mode:Mode):
         mark = ""
-        if quiet_mode:
+        if mode == Mode.QUIET:
             mark = OS.get_from_local_json("lastMark")
-        elif buffer_mode:
+        elif mode == Mode.CLIPBOARD:
             mark = pyperclip.paste()
         else:
             barcode = OS.get_from_local_json("barcode") 
