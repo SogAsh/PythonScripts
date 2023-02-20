@@ -6,12 +6,14 @@ from helpers import OS, CS, Mark, DB
 import pyperclip
 from console import fg, bg, fx
 from abc import ABC, abstractmethod
+import string
 
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
 MARKTYPES = ["Excise", "Tabak", "Cis", "Milk"]
 ERR = bg.lightred + fg.black
 YO = bg.green + fg.black
+ERROR = lambda: print(ERR("\nПри выполнении скрипта возникла ошибка\n\n"))
 SUCCESS = lambda: print(YO("\nСкрипт завершился успешно\n\n"))
 file_change_style = fg.lightblack + fx.italic
 
@@ -63,12 +65,14 @@ class TurnOffCashbox(Command):
             TurnOffCashbox.help(ERR("Неверный аргумент"))
             return
         should_stop = bool(int(params[0]))
-        success = OS.change_cashbox_service_state(should_stop)
-        if success:
+        try:
+            OS.change_cashbox_service_state(should_stop)
             print(f"Вы {'остановили' if should_stop else 'запустили'} службу SKBKontur.Cashbox") 
             SUCCESS()
-        else: 
+        except:
             print(f"Не удалось {'остановить' if should_stop else 'запустить'} службу SKBKontur.Cashbox")
+            ERROR()
+
 
 class SetStage(Command):
 
@@ -96,11 +100,14 @@ class SetStage(Command):
             return
 
         stage = params[0]
-        OS.change_cashbox_service_state(True)
-        OS.change_staging_in_config(int(stage), OS.find_config_path())
-        OS.change_cashbox_service_state(False)
-        print(f"Касса готова к работе с {stage + ' стейджем' if stage != '9' else ' продом'}")
-        SUCCESS() 
+        try:      
+            OS.change_staging_in_config(int(stage), OS.find_config_path())
+            print(f"Касса готова к работе с {stage + ' стейджем' if stage != '9' else ' продом'}")
+            SUCCESS() 
+        except: 
+            print(f"Не удалось переключить стейдж. Проверьте, в каком состоянии служба кассы")
+            ERROR()
+            
 
 class GetCashboxId(Command):
 
@@ -120,10 +127,15 @@ class GetCashboxId(Command):
 
     @staticmethod
     def execute():
-        cashbox_id = DB().get_cashbox_id(True)
-        pyperclip.copy(cashbox_id)
-        print(f"В вашем буфере обмена — текущий cashboxId: \n{cashbox_id}")
-        SUCCESS()
+        try: 
+            cashbox_id = DB().get_cashbox_id(True)
+            pyperclip.copy(cashbox_id)
+            print(f"В вашем буфере обмена — текущий cashboxId: \n{cashbox_id}")
+            SUCCESS()
+        except: 
+            print("Не удалось получить из базы CashboxId")
+            ERROR()
+
 
 class CacheCashboxId(Command):
 
@@ -176,15 +188,17 @@ class DeleteCashbox(Command):
         delete_cashbox = bool(int(params[1]))
         OS.change_cashbox_service_state(True)
         cashbox_path = OS.find_cashbox_path()
-        if delete_db:
-            OS.delete_folder(os.path.join(cashbox_path, "db"))
-        if delete_cashbox:
-            OS.delete_folder(os.path.join(cashbox_path, "bin"))
-        if delete_cashbox:
-            print("Приложение кассы удалено")
-        if delete_db:
-            print("БД кассы удалена")
-        SUCCESS()
+        try:
+            if delete_db:
+                OS.delete_folder(os.path.join(cashbox_path, "db"))
+                print("БД кассы удалена")
+            if delete_cashbox:
+                OS.delete_folder(os.path.join(cashbox_path, "bin"))
+                print("Приложение кассы удалено")
+            SUCCESS()
+        except:
+            ERROR()
+
 
 class GenToken(Command):
 
@@ -204,10 +218,14 @@ class GenToken(Command):
 
     @staticmethod
     def execute():
-        cashbox_id = DB().get_cashbox_id(True)
-        CS().gen_token(cashbox_id)
-        print(f"В вашем буфере обмена - новый токен для кассы: \n{cashbox_id}")
-        SUCCESS()
+        try:
+            cashbox_id = DB().get_cashbox_id(True)
+            CS().gen_token(cashbox_id)
+            print(f"В вашем буфере обмена - новый токен для кассы: \n{cashbox_id}")
+            SUCCESS()
+        except:
+            print("Не удалось сгенерировать токен. Возможно, не подключен VPN Контура")
+            ERROR()
 
 class GenGuid(Command):
 
@@ -253,13 +271,17 @@ class SetShiftDuration(Command):
         if (len(params) != 1):
             SetShiftDuration.help(ERR("Неверное количество параметров"))
             return
-        duration_in_hours = int(params[0])
-        db = DB()
-        shift = json.loads(db.get_last_shift_from_db())
-        shift["openInfo"]["openDateTime"] = str(datetime.datetime.now() - datetime.timedelta(hours = duration_in_hours))
-        db.edit_shift_in_db(json.dumps(shift), True)
-        print(f"Длительность текущей смены = {duration_in_hours}")
-        SUCCESS()
+        try:
+            duration_in_hours = int(params[0])
+            db = DB()
+            shift = json.loads(db.get_last_shift_from_db())
+            shift["openInfo"]["openDateTime"] = str(datetime.datetime.now() - datetime.timedelta(hours = duration_in_hours))
+            db.edit_shift_in_db(json.dumps(shift), True)
+            print(f"Длительность текущей смены = {duration_in_hours}")
+            SUCCESS()
+        except:
+            print("Не удалось изменить смену в БД")
+            ERROR()
 
 class UnregLastReceipt(Command):
 
@@ -279,14 +301,18 @@ class UnregLastReceipt(Command):
 
     @staticmethod
     def execute():
-        db = DB()
-        (id, shiftId, number, content) = db.get_last_receipt()
-        receipt = json.loads(content)
-        receipt["kkmRegistrationStatus"] = "Error"
-        receipt["correctionReceiptId"] = None
-        db.update_receipt_content(json.dumps(receipt), id, True)
-        print(f"Последний чек продажи стал незареганным. \nОн на сумму = {receipt['contributedSum']}")
-        SUCCESS()
+        try:
+            db = DB()
+            (id, shiftId, number, content) = db.get_last_receipt()
+            receipt = json.loads(content)
+            receipt["kkmRegistrationStatus"] = "Error"
+            receipt["correctionReceiptId"] = None
+            db.update_receipt_content(json.dumps(receipt), id, True)
+            print(f"Последний чек продажи стал незареганным. \nОн на сумму = {receipt['contributedSum']}")
+            SUCCESS()
+        except: 
+            print("Не удалось изменить чек в БД")
+            ERROR()
 
 class FlipSettings(Command):
 
@@ -309,14 +335,18 @@ class FlipSettings(Command):
         if (len(params) != 1):
             FlipSettings.help(ERR("Неверное количество параметров"))
             return
-        settings_name = params[0]
-        cashbox_id = DB().get_cashbox_id(True)
-        cs = CS()
-        settings = cs.get_cashbox_settings_json(cashbox_id)
-        flipped_settings = cs.flip_settings(settings, settings_name)
-        cs.post_cashbox_settings(cashbox_id, flipped_settings)
-        print(f'Настройка {settings_name} теперь = {settings["settings"]["backendSettings"][settings_name]}')
-        SUCCESS()
+        try:
+            settings_name = params[0]
+            cashbox_id = DB().get_cashbox_id(True)
+            cs = CS()
+            settings = cs.get_cashbox_settings_json(cashbox_id)
+            flipped_settings = cs.flip_settings(settings, settings_name)
+            cs.post_cashbox_settings(cashbox_id, flipped_settings)
+            print(f'Настройка {settings_name} теперь = {settings["settings"]["backendSettings"][settings_name]}')
+            SUCCESS()
+        except: 
+            print("Не удалось изменить настройки. Возможно, не подключен VPN Контура")
+            ERROR()
 
 class SetHardwareSettings(Command):
 
@@ -339,29 +369,37 @@ class SetHardwareSettings(Command):
         print("""Выберите 1 или 2 ККТ: первая для ЮЛ с ИНН = 6699000000, вторая - для ЮЛ с ИНН = 992570272700
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
         \nНапример, если ввели "1" - Атол в режиме 1 ЮЛ, если "2 3" - Вики и Штрих в режиме 2ЮЛ\n""")
-        kkm_positions = list(map(int, input().strip().split()))
-        print("""\nВыберите 1 или 2 терминала: 
-        \n0. None \n1. External \n2. Inpas\n3. Ingenico \n4. Sberbank\n""")
-        terminal_positions = list(map(int, input().strip().split()))
+        try: 
+            kkm_positions = list(map(int, input().strip().split()))
+            print("""\nВыберите 1 или 2 терминала: 
+            \n0. None \n1. External \n2. Inpas\n3. Ingenico \n4. Sberbank\n""")
+            terminal_positions = list(map(int, input().strip().split()))
+        except(ValueError):
+            print(ERR("Вместо цифр ввели какие-то буквы"))
+            return
         if len(kkm_positions) == 0 or len(terminal_positions) == 0:
             print(ERR("\nВы не указали ККТ или эквайринги\n\n"))
             return
         if len(kkm_positions) != len(terminal_positions):
             print(ERR("\nВы указали разное количество ККТ и терминалов\n\n"))
             return
-        OS.change_cashbox_service_state(True)
-        kkms = []
-        terminals = []
-        for i in range (len(kkm_positions)):
-            kkms.append(KKT[kkm_positions[i]])
-            terminals.append(POS[terminal_positions[i]])
-        db = DB()
-        cashbox_id = db.get_cashbox_id()
-        le = CS().change_hardware_settings(cashbox_id, kkms, terminals)
-        db.set_legalentityid_in_products(le, True)
-        OS.change_cashbox_service_state(False)
-        print(f"Ваши ККТ: {', '.join(kkms) }\nВаши терминалы: {', '.join(terminals)}")
-        SUCCESS()
+        try: 
+            OS.change_cashbox_service_state(True)
+            kkms = []
+            terminals = []
+            for i in range (len(kkm_positions)):
+                kkms.append(KKT[kkm_positions[i]])
+                terminals.append(POS[terminal_positions[i]])
+            db = DB()
+            cashbox_id = db.get_cashbox_id()
+            le = CS().change_hardware_settings(cashbox_id, kkms, terminals)
+            db.set_legalentityid_in_products(le, True)
+            OS.change_cashbox_service_state(False)
+            print(f"Ваши ККТ: {', '.join(kkms) }\nВаши терминалы: {', '.join(terminals)}")
+            SUCCESS()
+        except:
+            print("Не удалось установить настройки оборудования. Возможно, не подключен VPN Контура")
+            SUCCESS()
 
 class UseScanner(Command):
 
@@ -390,8 +428,13 @@ class UseScanner(Command):
         if params[0] == "quiet":
             Mark.paste_mark_in_scanner_mode("", False, True)
         else:
-            print("Какую марку вставить? Введите число: \n \n 0. Из буфера \n 1. Акцизную \n 2. Сигарет \n 3. Шин, духов, одежды, обуви, фото, воды \n 4. Молока")
-            number = int(input().strip())
+            #TO DO: сделать enum
+            print("Какую марку вставить? Введите число:\n\n0. Из буфера\n1. Акцизную\n2. Сигарет\n 3. Шин, духов, одежды, обуви, фото, воды\n 4. Молока")
+            number = input().strip()
+            if number not in string.digits:
+                print(ERR("Вы ввели не число"))
+                return
+            number = int(number)
             if number == 0:
                 Mark.paste_mark_in_scanner_mode("", True, False)
             else: 

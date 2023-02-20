@@ -77,11 +77,8 @@ class DB():
         self.cur = self.con.cursor()
 
     def set_db_connection(self):
-        try: 
-            return sqlite3.connect(os.path.join(OS.find_cashbox_path(), "db", "db.db"))
-        except:
-            print(ERR("\n\nНе удалось установить соединение с БД\n\n")) 
-            input()
+        return sqlite3.connect(os.path.join(OS.find_cashbox_path(), "db", "db.db"))
+
 
     def update_products_with_pattern(self, products, legalEntityId, pattern="", should_print_name = False): 
         no_products_set = True 
@@ -162,12 +159,9 @@ class OS():
 
     @staticmethod
     def change_cashbox_service_state(should_stop):
-        try:
-            subprocess.call(['sc', f'{"stop" if should_stop else "start"}', 'SKBKontur.Cashbox'])
-            time.sleep(1 if should_stop else 4)
-            return True
-        except:
-            return False
+        subprocess.call(['sc', f'{"stop" if should_stop else "start"}', 'SKBKontur.Cashbox'])
+        time.sleep(1 if should_stop else 4)
+
 
     @staticmethod
     def close_sqlite(): 
@@ -182,8 +176,7 @@ class OS():
         try:
             shutil.rmtree(file_path)
         except:
-            print(ERR("\n\nНе удалось удалить папку\n\n"))
-            print(f"Адрес папки: {file_path}")
+            print(f"Не удалось удалить папку: {file_path}")
 
     @staticmethod
     def find_cashbox_path():
@@ -220,6 +213,7 @@ class OS():
 
     @staticmethod
     def change_staging_in_config(stage, config_path):
+        OS.change_cashbox_service_state(True)
         with open(config_path, "r+") as file:
             data = json.loads(file.read())
             if stage == 2:
@@ -232,10 +226,12 @@ class OS():
                 data["settings"][0]["loyaltyCashboxClientUrl"] = "https://market.testkontur.ru/loyaltyCashboxApi"
                 data["settings"][0]["cashboxBackendUrl"] = "https://market.testkontur.ru"
 
-            newJson = json.dumps(data, indent=4)
-            file.seek(0)
-            file.write(newJson)
-            file.truncate()   
+        newJson = json.dumps(data, indent=4)
+        file.seek(0)
+        file.write(newJson)
+        file.truncate()   
+        OS.change_cashbox_service_state(False)
+
 
     @staticmethod
     def cache_in_local_json(key, value):
