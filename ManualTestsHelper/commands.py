@@ -10,15 +10,13 @@ import string
 
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
-MARKTYPES = ["Excise", "Tabak", "Cis", "Milk"]
+MARKTYPES = ["Excise", "Tabak", "Cis", "Milk", "Furs"]
 
 ERR = bg.lightred + fg.black
 YO = bg.green + fg.black
 ERROR = lambda: print(ERR("\nПри выполнении скрипта возникла ошибка\n\n"))
 SUCCESS = lambda: print(YO("\nСкрипт завершился успешно\n\n"))
-
-
-# file_change_style = fg.lightblack + fx.italic
+file_change_style = fg.lightblack + fx.italic
 
 class Command(ABC): 
  
@@ -431,13 +429,13 @@ class UseScanner(Command):
         if params[0] == "quiet":
             Mark.paste_mark_in_scanner_mode("", Mode.QUIET)
         else:
-            print("Какую марку вставить? Введите число:\n\n0. Из буфера\n1. Акцизную\n2. Сигарет\n3. Шин, духов, одежды, обуви, фото, воды\n4. Молока")
+            print("Какую марку вставить? Введите число:\n\n0. Из буфера\n1. Акцизную\n2. Сигарет\n3. Шин, духов, одежды, обуви, фото, воды\n4. Молока\n5. Шубы")
             number = input().strip()
             if number not in string.digits:
                 print(ERR("Вы ввели не число"))
                 return
             number = int(number)
-            if number > len(Mode):
+            if number > len(MARKTYPES):
                 print("\n" + ERR("Неверное число") + "\n")
                 return
             if number == 0:

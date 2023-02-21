@@ -50,6 +50,8 @@ class Mark():
                 mark = "010" + barcode + "21" + OS.gen_random_string(13) + "93" +  OS.gen_random_string(13)
             elif product_type == "Milk":
                 mark = "010" + barcode + "21" + OS.gen_random_string(8) + "93" + OS.gen_random_string(4)
+            elif product_type == "Furs":
+                mark = "RU-" + "430302-" + "ABC" + OS.get_random_numbers(7)
             else:  
                 mark = Mark.get_mark_from_file(product_type) 
         OS.cache_in_local_json("lastMark", mark)
@@ -265,6 +267,12 @@ class OS():
     def gen_random_string(length):
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for i in range(length))
+    @staticmethod
+    def get_random_numbers(length):
+        digits = string.digits
+        return ''.join(random.choice(digits) for i in range(length))
+
+
 
 class CS():
 
