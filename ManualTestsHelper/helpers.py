@@ -10,20 +10,32 @@ import random
 import string
 import requests
 from console import fg, bg, fx
-from enum import Enum
-
-ERR = bg.lightred + fg.black
+from enum import Enum, auto
 
 class Mode(Enum):
-    NORMAL = 1, 
-    CLIPBOARD = 2, 
-    FILE = 3, 
-    QUIET = 4
+    NORMAL = auto()
+    CLIPBOARD = auto()
+    FILE = auto()
+    QUIET = auto()
+
 
 class Mark():
       
-    
+
     ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"%&'*+-./_,:;=<>?"
+    MARKTYPES = [
+        ("Excise", "Акцизную"), 
+        ("Tabak", "Сигарет"), 
+        ("Cis", "Шин, духов, одежды, обуви, фото, воды"), 
+        ("Milk", "Молока"), 
+        ("Furs", "Шуб")
+    ]
+
+    def print_marktypes():
+        text = ""
+        for index, (type, name) in enumerate(Mark.MARKTYPES):
+            text += str(index+1) + ". " + str(name) + "\n"
+        print(text)
     
     def paste_mark_in_scanner_mode(product_type, mode: Mode):
         mark = Mark.get_mark(product_type, mode)
@@ -41,21 +53,24 @@ class Mark():
         elif mode == Mode.CLIPBOARD:
             mark = pyperclip.paste()
         else:
-            barcode = OS.get_from_local_json("barcode") 
-            if product_type == "Tabak": 
-                print("Какой нужен МРЦ в копейках?") 
-                price = int(input().strip()) 
-                mark = "0" + barcode + "-UWzSA8" + Mark.encode_price_for_mark(price) + OS.gen_random_string(5)
-            elif product_type == "Cis":
-                mark = "010" + barcode + "21" + OS.gen_random_string(13) + "93" +  OS.gen_random_string(13)
-            elif product_type == "Milk":
-                mark = "010" + barcode + "21" + OS.gen_random_string(8) + "93" + OS.gen_random_string(4)
-            elif product_type == "Furs":
-                mark = "RU-" + "430302-" + "ABC" + OS.get_random_numbers(7)
-            else:  
-                mark = Mark.get_mark_from_file(product_type) 
+            mark = Mark.gen_mark(product_type)
         OS.cache_in_local_json("lastMark", mark)
         return mark
+
+    def gen_mark(product_type):
+        barcode = OS.get_from_local_json("barcode") 
+        if product_type == "Tabak": 
+            print("Какой нужен МРЦ в копейках?") 
+            price = int(input().strip()) 
+            return "0" + barcode + "-UWzSA8" + Mark.encode_price_for_mark(price) + OS.gen_random_string(5)
+        elif product_type == "Cis":
+            return "010" + barcode + "21" + OS.gen_random_string(13) + "93" +  OS.gen_random_string(13)
+        elif product_type == "Milk":
+            return "010" + barcode + "21" + OS.gen_random_string(8) + "93" + OS.gen_random_string(4)
+        elif product_type == "Furs":
+            return "RU-" + "430302-" + "ABC" + OS.get_random_numbers(7)
+        return Mark.get_mark_from_file(product_type) 
+        
 
     def get_mark_from_file(product_type):
         path = os.path.join(os.path.dirname(__file__), "marks", product_type + ".txt")

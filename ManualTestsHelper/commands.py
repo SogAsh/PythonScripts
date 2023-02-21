@@ -10,12 +10,10 @@ import string
 
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
-MARKTYPES = ["Excise", "Tabak", "Cis", "Milk", "Furs"]
-
-ERR = bg.lightred + fg.black
-YO = bg.green + fg.black
-ERROR = lambda: print(ERR("\nПри выполнении скрипта возникла ошибка\n\n"))
-SUCCESS = lambda: print(YO("\nСкрипт завершился успешно\n\n"))
+ERROR_FORMAT = bg.lightred + fg.black
+SUCCESS_FORMAT = bg.green + fg.black
+ERROR = lambda: print(ERROR_FORMAT("\nПри выполнении скрипта возникла ошибка\n\n"))
+SUCCESS = lambda: print(SUCCESS_FORMAT("\nСкрипт завершился успешно\n\n"))
 file_change_style = fg.lightblack + fx.italic
 
 class Command(ABC): 
@@ -60,10 +58,10 @@ class TurnOffCashbox(Command):
     @staticmethod
     def execute(*params):
         if (len(params) != 1):
-            TurnOffCashbox.help(ERR("Неверное количество параметров"))
+            TurnOffCashbox.help(ERROR_FORMAT("Неверное количество параметров"))
             return
         if (params[0] not in ["0", "1"]):
-            TurnOffCashbox.help(ERR("Неверный аргумент"))
+            TurnOffCashbox.help(ERROR_FORMAT("Неверный аргумент"))
             return
         should_stop = bool(int(params[0]))
         try:
@@ -94,10 +92,10 @@ class SetStage(Command):
     @staticmethod
     def execute(*params):
         if (len(params) != 1):
-            SetStage.help(ERR("Неверное количество параметров"))
+            SetStage.help(ERROR_FORMAT("Неверное количество параметров"))
             return
         if (params[0] not in ["0", "1", "9"]):
-            SetStage.help(ERR("Неверный аргумент"))
+            SetStage.help(ERROR_FORMAT("Неверный аргумент"))
             return
 
         stage = params[0]
@@ -180,10 +178,10 @@ class DeleteCashbox(Command):
     @staticmethod
     def execute(*params):
         if (len(params) != 2):
-            DeleteCashbox.help(ERR("Неверное количество параметров"))
+            DeleteCashbox.help(ERROR_FORMAT("Неверное количество параметров"))
             return
         if (params[0] not in ["0", "1"] or params[1] not in ["0", "1"]):
-            DeleteCashbox.help(ERR("Неверный аргумент"))
+            DeleteCashbox.help(ERROR_FORMAT("Неверный аргумент"))
             return
         delete_db = bool(int(params[0]))
         delete_cashbox = bool(int(params[1]))
@@ -270,7 +268,7 @@ class SetShiftDuration(Command):
     @staticmethod
     def execute(*params):
         if (len(params) != 1):
-            SetShiftDuration.help(ERR("Неверное количество параметров"))
+            SetShiftDuration.help(ERROR_FORMAT("Неверное количество параметров"))
             return
         try:
             duration_in_hours = int(params[0])
@@ -334,7 +332,7 @@ class FlipSettings(Command):
     @staticmethod
     def execute(*params):
         if (len(params) != 1):
-            FlipSettings.help(ERR("Неверное количество параметров"))
+            FlipSettings.help(ERROR_FORMAT("Неверное количество параметров"))
             return
         try:
             settings_name = params[0]
@@ -376,13 +374,13 @@ class SetHardwareSettings(Command):
             \n0. None \n1. External \n2. Inpas\n3. Ingenico \n4. Sberbank\n""")
             terminal_positions = list(map(int, input().strip().split()))
         except(ValueError):
-            print(ERR("Вместо цифр ввели какие-то буквы"))
+            print(ERROR_FORMAT("Вместо цифр ввели какие-то буквы"))
             return
         if len(kkm_positions) == 0 or len(terminal_positions) == 0:
-            print(ERR("\nВы не указали ККТ или эквайринги\n\n"))
+            print(ERROR_FORMAT("\nВы не указали ККТ или эквайринги\n\n"))
             return
         if len(kkm_positions) != len(terminal_positions):
-            print(ERR("\nВы указали разное количество ККТ и терминалов\n\n"))
+            print(ERROR_FORMAT("\nВы указали разное количество ККТ и терминалов\n\n"))
             return
         try: 
             OS.change_cashbox_service_state(True)
@@ -400,7 +398,7 @@ class SetHardwareSettings(Command):
             SUCCESS()
         except:
             print("Не удалось установить настройки оборудования. Возможно, не подключен VPN Контура")
-            SUCCESS()
+            ERROR()
 
 class UseScanner(Command):
 
@@ -415,32 +413,34 @@ class UseScanner(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + "\n" + f"У команды '{UseScanner.name()}' один аргумент: " 
+        print(message + f"\n\nУ команды '{UseScanner.name()}' один аргумент: " 
         + "normal - выбор марки, quiet - вставка прошлой марки")
 
     @staticmethod       
     def execute(*params):
         if (len(params) != 1):
-            UseScanner.help(ERR("Неверное количество параметров"))
+            UseScanner.help(ERROR_FORMAT("\nНеверное количество параметров"))
             return
         if (params[0] not in ["normal", "quiet"]):
-            UseScanner.help(ERR("Неверный аргумент"))
+            UseScanner.help(ERROR_FORMAT("\nНеверный аргумент"))
             return
         if params[0] == "quiet":
             Mark.paste_mark_in_scanner_mode("", Mode.QUIET)
         else:
-            print("Какую марку вставить? Введите число:\n\n0. Из буфера\n1. Акцизную\n2. Сигарет\n3. Шин, духов, одежды, обуви, фото, воды\n4. Молока\n5. Шубы")
+            print("Какую марку вставить? Введите число:\n")
+            print("0. Из буфера")
+            Mark.print_marktypes()
             number = input().strip()
             if number not in string.digits:
-                print(ERR("Вы ввели не число"))
+                print(ERROR_FORMAT("\nВы ввели не число\n\n"))
                 return
             number = int(number)
-            if number > len(MARKTYPES):
-                print("\n" + ERR("Неверное число") + "\n")
+            if number > len(Mark.MARKTYPES):
+                print(ERROR_FORMAT("\nНеверное число\n\n"))
                 return
             if number == 0:
                 Mark.paste_mark_in_scanner_mode("", Mode.CLIPBOARD)
             else: 
-                Mark.paste_mark_in_scanner_mode(MARKTYPES[number - 1], Mode.NORMAL)
+                Mark.paste_mark_in_scanner_mode(Mark.MARKTYPES[number - 1][0], Mode.NORMAL)
         print("Код марки успешно введен в режиме сканера")
         SUCCESS()

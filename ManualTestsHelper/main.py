@@ -41,10 +41,10 @@ HOTSTRINGS = [
 ]
 
 def main():
-    print(YO("\nКассовых успехов!\n\n"))
+    print(SUCCESS_FORMAT("\nКассовых успехов!\n\n"))
     print("Выберите режим: \n1. Горячие клавиши \n2. Команды в консоли")
     if (input() == "1"):
-        print(YO("\nГорячие клавиши готовы!\n\n"))
+        print(SUCCESS_FORMAT("\nГорячие клавиши готовы!\n\n"))
         for key, command, params in HOTKEYS:
             add_hotkey(key, command, params)
         for key, _, value in HOTSTRINGS:
@@ -53,7 +53,7 @@ def main():
         print_hotkeys()
         keyboard.wait("alt+esc")
     else:
-        print(YO("\nКонсольные команды ждут вас!\n\n"))        
+        print(SUCCESS_FORMAT("\nКонсольные команды ждут вас!\n\n"))        
         while(True):
             print_commands()
             res = input().strip().split()
@@ -65,7 +65,7 @@ def main():
                 command = COMMAND_NAMES[cmd]
                 command.execute(*res[1:])
             except KeyError:
-                print(ERR("\nКоманда не найдена\n\n"))
+                print(ERROR_FORMAT("\nКоманда не найдена\n\n"))
 
 def add_hotkey(key, command, params):
     keyboard.add_hotkey(key, lambda: command.execute(*params))
