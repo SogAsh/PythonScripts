@@ -4,6 +4,7 @@ import subprocess
 import os
 
 PATH = os.path.dirname(__file__)
+VERSION = 2
 
 def init():
     try: 
@@ -24,7 +25,7 @@ def should_init():
     if os.path.exists(json_path):
         with open(json_path, "r") as file:
             data = json.loads(file.read())
-            if "initialized" in data and data["initialized"] == "True":
+            if "version" in data and data["version"] == VERSION:
                 return False
     return True
 
@@ -35,5 +36,5 @@ def fill_initial_json():
     data["cashboxId"] = ""
     data["lastMark"] = "01121192496090HKMVWR6PP160TEMVENQYEJXW13PUDZUCB0TNP7LUPBG444DKNMKZCYOYMPTT1CCP7TPSLZ671W923SSWP57QFU0CCV1ZESSDYQXAFLYOGCXFPMUTXW3W5LACSDGQY6S94V3DVHH4"
     data["barcode"] = "2100000000463"
-    data["initialized"] = "True"
+    data["version"] = VERSION
     return json.dumps(data, indent=4)
