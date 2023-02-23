@@ -2,6 +2,7 @@ import ctypes
 from ini import *
 import keyboard
 from commands import *
+import win32api
 
 COMMANDS = [TurnOffCashbox, SetStage, GetCashboxId, CacheCashboxId, DeleteCashbox, GenToken, 
 GenGuid, SetShiftDuration, UnregLastReceipt, FlipSettings, SetHardwareSettings, UseScanner]
@@ -104,4 +105,5 @@ if __name__ == "__main__":
         exit() 
     if (should_init()):
         init()
+    win32api.LoadKeyboardLayout('00000409',1)
     main()
