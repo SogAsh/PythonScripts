@@ -66,10 +66,10 @@ class TurnOffCashbox(Command):
         should_stop = bool(int(params[0]))
         try:
             OS.change_cashbox_service_state(should_stop)
-            print(f"Вы {'остановили' if should_stop else 'запустили'} службу SKBKontur.Cashbox") 
+            print(f"\nВы {'остановили' if should_stop else 'запустили'} службу SKBKontur.Cashbox") 
             SUCCESS()
         except:
-            print(f"Не удалось {'остановить' if should_stop else 'запустить'} службу SKBKontur.Cashbox")
+            print(f"\nНе удалось {'остановить' if should_stop else 'запустить'} службу SKBKontur.Cashbox")
             ERROR()
 
 

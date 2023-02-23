@@ -2,9 +2,10 @@ import json
 import sys
 import subprocess
 import os
+import getpass
 
 PATH = os.path.dirname(__file__)
-VERSION = 2
+VERSION = 3
 
 def init():
     try: 
@@ -17,7 +18,7 @@ def init():
     with open(os.path.join(PATH, "data.json"), "w") as file:
         file.write(fill_initial_json()) 
     print("\n\nБиблиотеки установлены, файл data.json создан успешно")
-    print("Нажмите любую кнопку для продолжения")
+    print("Нажмите любую кнопку для продолжения...")
     input()
 
 def should_init():
@@ -38,3 +39,12 @@ def fill_initial_json():
     data["barcode"] = "2100000000463"
     data["version"] = VERSION
     return json.dumps(data, indent=4)
+
+def add_to_startup():
+    try:
+        file_path = os.path.realpath(__file__)
+        bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup' % getpass.getuser()
+        with open(bat_path + '\\' + "run_cashbox_scripts.bat", "w+") as bat_file:
+            bat_file.write(r'start "" "%s"' % file_path)
+    except: 
+        print("\n\nНе удалось добавить батник для автозапуска скриптов в папку Автозагрузка\n\n")

@@ -82,7 +82,6 @@ def print_hotkeys():
     print(format.format(f"alt+h", f"Вывести список горячих клавиш в консоль", ""))
     print_hotstrings()
 
-
 def print_hotstrings():
     format = "{0:<15} \t{1:<7} \t{2:40}"
     print("\n\nА для автозамены введите ключ куда угодно и поставьте пробел:\n")
@@ -105,5 +104,6 @@ if __name__ == "__main__":
         exit() 
     if (should_init()):
         init()
+        add_to_startup()
     win32api.LoadKeyboardLayout('00000409',1)
     main()
