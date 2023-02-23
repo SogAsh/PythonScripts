@@ -42,7 +42,7 @@ def fill_initial_json():
 
 def add_to_startup():
     try:
-        file_path = os.path.realpath(__file__)
+        file_path = os.path.join(PATH, "main.py")
         bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup' % getpass.getuser()
         with open(bat_path + '\\' + "run_cashbox_scripts.bat", "w+") as bat_file:
             bat_file.write(r'start "" "%s"' % file_path)
