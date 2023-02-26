@@ -38,6 +38,7 @@ def fill_initial_json():
     data["lastMark"] = "01121192496090HKMVWR6PP160TEMVENQYEJXW13PUDZUCB0TNP7LUPBG444DKNMKZCYOYMPTT1CCP7TPSLZ671W923SSWP57QFU0CCV1ZESSDYQXAFLYOGCXFPMUTXW3W5LACSDGQY6S94V3DVHH4"
     data["barcode"] = "2100000000463"
     data["version"] = VERSION
+    data["secondLegalEntity"] = "617f5b99-9dd0-4e84-a0fb-35d23890de9c"
     return json.dumps(data, indent=4)
 
 def add_to_startup():

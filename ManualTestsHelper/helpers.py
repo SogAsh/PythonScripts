@@ -338,8 +338,11 @@ class CS():
 
     def get_legal_entity_ids(self, settings, two_UL : bool):
         legal_entities = list(settings["settings"]["backendSettings"]["legalEntities"])
+        if len(legal_entities) == 2:
+            OS.cache_in_local_json("secondLegalEntity", legal_entities[1]["legalEntityId"])
         if (two_UL and len(legal_entities) == 1):
-            legal_entities.append({"legalEntityId": "d4ab40fe-cf40-4a5f-8636-32a1efbd66af", "inn": "992570272700","kpp": "", "name": "ИП"})
+            second_LE = OS.get_from_local_json("secondLegalEntity")
+            legal_entities.append({"legalEntityId": second_LE, "inn": "992570272700","kpp": "", "name": "ИП"})
         if (not two_UL):
             legal_entities = [legal_entities[0]]
         legal_entities[0]["inn"] = "6699000000"
