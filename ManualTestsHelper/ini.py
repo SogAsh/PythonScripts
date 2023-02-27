@@ -18,7 +18,7 @@ def init():
     with open(os.path.join(PATH, "data.json"), "w") as file:
         file.write(fill_initial_json()) 
     print("\n\nБиблиотеки установлены, файл data.json создан успешно")
-    print("Нажмите любую кнопку для продолжения...")
+    print("Нажмите любую кнопку для продолжения...\n")
     input()
 
 def should_init():
@@ -42,10 +42,17 @@ def fill_initial_json():
     return json.dumps(data, indent=4)
 
 def add_to_startup():
+    bat_name = "run_cashbox_scripts.bat"
     try:
         file_path = os.path.join(PATH, "main.py")
         bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup' % getpass.getuser()
-        with open(bat_path + '\\' + "run_cashbox_scripts.bat", "w+") as bat_file:
+        if os.path.exists(os.path.join(bat_path, bat_name)):
+            return 
+        print("\nДобавить скрипты в автозагрузку? \n1. Да \n2. Нет\n")
+        if input().strip() != "1":
+            return
+        with open(bat_path + '\\' + bat_name, "w+") as bat_file:
             bat_file.write(r'start "" "%s"' % file_path)
+        print("\nСкрипты успешно добавлены в автозагрузку")
     except: 
         print("\n\nНе удалось добавить батник для автозапуска скриптов в папку Автозагрузка\n\n")

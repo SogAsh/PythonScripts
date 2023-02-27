@@ -104,6 +104,6 @@ if __name__ == "__main__":
         exit() 
     if (should_init()):
         init()
-        add_to_startup()
+    add_to_startup()
     win32api.LoadKeyboardLayout('00000409',1)
     main()
