@@ -5,11 +5,12 @@ import os
 import getpass
 
 PATH = os.path.dirname(__file__)
-VERSION = 3
+VERSION = 4
 
 def init():
     try: 
         requirements = os.path.join(PATH, "requirements.txt")
+        subprocess.check_call([sys.executable, "-m", "ensurepip"])
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", f"{requirements}"])
     except:
         print("\n\nНе удалось установить библиотеки.\n\nВозможно, неправильно установлен питон")
@@ -56,3 +57,7 @@ def add_to_startup():
         print("\nСкрипты успешно добавлены в автозагрузку")
     except: 
         print("\n\nНе удалось добавить батник для автозапуска скриптов в папку Автозагрузка\n\n")
+
+
+if (should_init()):
+    init()

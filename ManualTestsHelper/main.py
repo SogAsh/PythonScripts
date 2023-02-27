@@ -1,4 +1,7 @@
 import ctypes
+if not ctypes.windll.shell32.IsUserAnAdmin(): 
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)        
+    exit() 
 from ini import *
 import keyboard
 from commands import *
@@ -99,11 +102,6 @@ def print_commands():
     print("\n ") 
 
 if __name__ == "__main__":
-    if not ctypes.windll.shell32.IsUserAnAdmin(): 
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)        
-        exit() 
-    if (should_init()):
-        init()
     add_to_startup()
     win32api.LoadKeyboardLayout('00000409',1)
     main()
