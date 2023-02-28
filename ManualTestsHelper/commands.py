@@ -196,6 +196,7 @@ class DeleteCashbox(Command):
                 print("Приложение кассы удалено")
             SUCCESS()
         except:
+            print("Не удалось удалить папку")
             ERROR()
 
 

@@ -195,12 +195,16 @@ class OS():
             print("Не удалось закрыть SQLite")
 
     @staticmethod
-    def delete_folder(file_path):
+    def delete_folder(file_path, retries = 5):
         OS.close_sqlite()
-        try:
-            shutil.rmtree(file_path)
-        except:
-            print(f"Не удалось удалить папку: {file_path}")
+        for i in range (retries):
+            try:
+                shutil.rmtree(file_path)
+            except:
+                pass
+            time.sleep(1)
+            if not os.path.exists(file_path):
+                return    
 
     @staticmethod
     def find_cashbox_path():
