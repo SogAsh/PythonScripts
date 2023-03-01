@@ -45,6 +45,7 @@ class Mark():
         for i in range(len(mark)):
             keyboard.write(mark[i])
             time.sleep(0.01)
+        print(f"\nМарка: {mark}\n")
 
     def get_mark(product_type, mode:Mode):
         mark = ""
@@ -172,12 +173,7 @@ class DB():
         self.con.commit()
         if (final_query):
             self.con.close()
-    
-    def __del__(self):
-        try:
-            self.con.close()
-        except:
-            print("Объект БД уничтожен")
+
 
 class OS():
 
@@ -204,6 +200,7 @@ class OS():
                 pass
             time.sleep(1)
             if not os.path.exists(file_path):
+                print(f"Удалили: {file_path}\n")
                 return    
 
     @staticmethod
@@ -318,6 +315,7 @@ class CS():
             print(f"Результат запроса {cashbox_id}/resetPassword: {result}")
             if result.ok: 
                 pyperclip.copy(f"{token}")
+                print(f"\nТокен: {token}\n")
                 break
 
     def change_hardware_settings(self, cashbox_id, kkt: list, pos: list):
