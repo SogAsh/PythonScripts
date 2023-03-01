@@ -7,6 +7,8 @@ from ini import *
 import keyboard
 from commands import *
 import win32api
+import time
+import subprocess
 
 COMMANDS = [TurnOffCashbox, SetStage, GetCashboxId, CacheCashboxId, DeleteCashbox, GenToken, 
 GenGuid, SetShiftDuration, UnregLastReceipt, FlipSettings, SetHardwareSettings, UseScanner]
@@ -56,7 +58,7 @@ def main():
             add_hotstring(key, value)
         keyboard.add_hotkey("alt+h", lambda: print_hotkeys())
         print_hotkeys()
-        keyboard.wait("alt+esc")
+        restartAfterLocking()    
     else:
         print(SUCCESS_FORMAT("\nКонсольные команды ждут вас!\n\n"))        
         while(True):
@@ -101,6 +103,23 @@ def print_commands():
         print(format.format(f"{command.name()}", f"{command.description()}"))
     print(format.format("exit", "Выйти в меню скриптов"))
     print("\n ") 
+
+def isScreenLocked():
+    process_name='LogonUI.exe'
+    outputall=subprocess.check_output('TASKLIST')
+    if process_name in str(outputall):
+        return True
+    return False
+
+def restartAfterLocking():
+    while True:
+            time.sleep(5)
+            if isScreenLocked():
+                while(True):
+                    time.sleep(1)
+                    if not isScreenLocked():
+                        print("Перезапуск после блокировки...\n")
+                        os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
 if __name__ == "__main__":
     add_to_startup()
