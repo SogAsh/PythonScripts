@@ -56,17 +56,14 @@ def main():
             add_hotstring(key, value)
         keyboard.add_hotkey("alt+h", lambda: print_hotkeys())
         print_hotkeys()
-        while(True):
-            if input().strip() == "restart":
-                main()
-                return
+        keyboard.wait("alt+esc")
     else:
         print(SUCCESS_FORMAT("\nКонсольные команды ждут вас!\n\n"))        
         while(True):
             print_commands()
             res = input().strip().split()
             cmd = res[0]
-            if cmd == "restart":
+            if cmd == "exit":
                 main()
                 return
             try:
@@ -91,18 +88,18 @@ def print_hotkeys():
 
 def print_hotstrings():
     format = "{0:<15} \t{1:<7} \t{2:40}"
-    print("\n\nДля автозамены введите ключ куда угодно и поставьте пробел:\n")
-    print(format.format("Описание","Ключ", "Результат замены"))
+    print("\n\nА для автозамены введите ключ куда угодно и поставьте пробел:\n")
+    print(format.format("Что это","Ключ", "Результат замены"))
     for key, description, value in HOTSTRINGS:
         print(format.format(description, key, value))
-    print("\n\nrestart - напишите в консоль для перезапуска после блокировки экрана\n")
+    print("\n")
 
 def print_commands():
     format = "{0:<8} \t{1:<40}"
     print(format.format("Команда", "Описание"))
     for command in COMMANDS:
         print(format.format(f"{command.name()}", f"{command.description()}"))
-    print(format.format("restart", "Выйти в меню скриптов"))
+    print(format.format("exit", "Выйти в меню скриптов"))
     print("\n ") 
 
 if __name__ == "__main__":
