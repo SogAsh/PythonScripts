@@ -48,31 +48,29 @@ HOTSTRINGS = [
 ]
 
 def main():
-    print(SUCCESS_FORMAT("\nКассовых успехов!\n\n"))
-    print("Выберите режим: \n1. Горячие клавиши \n2. Команды в консоли")
-    if (input() == "1"):
-        print(SUCCESS_FORMAT("\nГорячие клавиши готовы!\n\n"))
-        for key, command, params in HOTKEYS:
-            add_hotkey(key, command, params)
-        for key, _, value in HOTSTRINGS:
-            add_hotstring(key, value)
-        keyboard.add_hotkey("alt+h", lambda: print_hotkeys())
-        print_hotkeys()
-        restartAfterLocking()    
-    else:
-        print(SUCCESS_FORMAT("\nКонсольные команды ждут вас!\n\n"))        
-        while(True):
-            print_commands()
-            res = input().strip().split()
-            cmd = res[0]
-            if cmd == "exit":
-                main()
-                return
-            try:
-                command = COMMAND_NAMES[cmd]
-                command.execute(*res[1:])
-            except KeyError:
-                print(ERROR_FORMAT("\nКоманда не найдена\n\n"))
+    print(SUCCESS_FORMAT("\nГорячие клавиши готовы!\n\n"))
+    for key, command, params in HOTKEYS:
+        add_hotkey(key, command, params)
+    for key, _, value in HOTSTRINGS:
+        add_hotstring(key, value)
+    keyboard.add_hotkey("alt+h", lambda: print_hotkeys())
+    keyboard.add_hotkey("alt+q", lambda: console_mode())
+    print_hotkeys()
+    restartAfterLocking()    
+
+def console_mode():
+    print(SUCCESS_FORMAT("\nКонсольные команды ждут вас!\n\n"))        
+    while(True):
+        print_commands()
+        res = input().strip().split()
+        cmd = res[0]
+        if cmd == "exit":
+            os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+        try:
+            command = COMMAND_NAMES[cmd]
+            command.execute(*res[1:])
+        except KeyError:
+            print(ERROR_FORMAT("\nКоманда не найдена\n\n"))
 
 def add_hotkey(key, command, params):
     keyboard.add_hotkey(key, lambda: command.execute(*params))
@@ -86,6 +84,7 @@ def print_hotkeys():
     for key, description, args in HOTKEY_NAMES:
         print(format.format(key, description, args))
     print(format.format(f"alt+h", f"Вывести список горячих клавиш в консоль", ""))
+    print(format.format(f"\nalt+q", f"Переключиться на консольный режим", ""))
     print_hotstrings()
 
 def print_hotstrings():
