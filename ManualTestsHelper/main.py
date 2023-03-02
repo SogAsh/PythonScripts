@@ -112,14 +112,13 @@ def isScreenLocked():
     return False
 
 def restartAfterLocking():
-    while True:
+    while not isScreenLocked():
             time.sleep(5)
-            if isScreenLocked():
-                while(True):
-                    time.sleep(1)
-                    if not isScreenLocked():
-                        print("Перезапуск после блокировки...\n")
-                        os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+    while(True):
+        time.sleep(1)
+        if not isScreenLocked():
+            print("Перезапуск после блокировки...\n")
+            os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
 if __name__ == "__main__":
     add_to_startup()
