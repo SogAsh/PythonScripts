@@ -20,7 +20,7 @@ def init():
     with open(os.path.join(PATH, "data.json"), "w") as file:
         file.write(fill_initial_json()) 
     print("\n\nБиблиотеки установлены, файл data.json создан успешно\n")
-    print("Нажмите Enter для продолжения...\n")
+    print("Введите что угодно и нажмите Enter...\n")
     input()
     os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
