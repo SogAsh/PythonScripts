@@ -9,7 +9,6 @@ import pyperclip
 import random
 import string
 import requests
-from console import fg, bg, fx
 from enum import Enum, auto
 
 class Mode(Enum):
@@ -365,14 +364,20 @@ class CS():
         return result
 
     def get_cashbox_settings_json(self, cashboxId):
-        response = self.session.get(self.backend_url + self.V2_URL_TAIL + f'{cashboxId}/settings')
-        return json.loads(response.content)
+        result = self.session.get(self.backend_url + self.V2_URL_TAIL + f'{cashboxId}/settings')
+        CS.log_request(result)
+        return json.loads(result.content)
 
     def post_cashbox_settings(self, cashboxId, settings, backend = True):
         settings_type = "backend" if backend else "app"
         self.session.headers['Content-Type'] = "application/json"
         result = self.session.post(self.backend_url + self.V2_URL_TAIL + f"{cashboxId}/settings/" + f"{settings_type}", data = json.dumps(settings))
-        print(result)
+        CS.log_request(result)
+        
+    def log_request(result):
+        print(result.request.method, result.url, sep=' ')
+        print(result.reason, result.status_code, sep=' ')
+        print()
 
     def flip_settings(self, settings, settings_name, settings_type = "backendSettings"):
         settings["settings"][settings_type][settings_name] = not settings["settings"][settings_type][settings_name]

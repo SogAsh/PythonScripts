@@ -4,11 +4,14 @@ if not ctypes.windll.shell32.IsUserAnAdmin():
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)        
     exit() 
 from ini import *
+if should_init():
+    init()
 import keyboard
-from commands import *
 import win32api
 import time
 import subprocess
+from console.utils import *
+from commands import *
 
 COMMANDS = [TurnOffCashbox, SetStage, GetCashboxId, CacheCashboxId, DeleteCashbox, GenToken, 
 GenGuid, SetShiftDuration, UnregLastReceipt, FlipSettings, SetHardwareSettings, UseScanner]
@@ -48,6 +51,7 @@ HOTSTRINGS = [
 ]
 
 def main():
+    set_title("ManualTestsHelper — Кассовые скрипты")
     print(SUCCESS_FORMAT("\nГорячие клавиши готовы!\n\n"))
     for key, command, params in HOTKEYS:
         add_hotkey(key, command, params)

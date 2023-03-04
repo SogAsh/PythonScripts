@@ -5,10 +5,11 @@ import os
 import getpass
 
 PATH = os.path.dirname(__file__)
-VERSION = 4
+VERSION = 5
 
 def init():
     try: 
+        print("\nУстанавливаются необходимые библиотеки...\n")
         requirements = os.path.join(PATH, "requirements.txt")
         subprocess.check_call([sys.executable, "-m", "ensurepip"])
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", f"{requirements}"])
@@ -18,9 +19,10 @@ def init():
         return
     with open(os.path.join(PATH, "data.json"), "w") as file:
         file.write(fill_initial_json()) 
-    print("\n\nБиблиотеки установлены, файл data.json создан успешно")
-    print("Нажмите любую кнопку для продолжения...\n")
+    print("\n\nБиблиотеки установлены, файл data.json создан успешно\n")
+    print("Нажмите Enter для продолжения...\n")
     input()
+    os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
 def should_init():
     json_path = os.path.join(PATH, "data.json")
@@ -57,7 +59,3 @@ def add_to_startup():
         print("\nСкрипты успешно добавлены в автозагрузку")
     except: 
         print("\n\nНе удалось добавить батник для автозапуска скриптов в папку Автозагрузка\n\n")
-
-
-if (should_init()):
-    init()

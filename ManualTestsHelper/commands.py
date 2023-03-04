@@ -5,8 +5,10 @@ import json
 from helpers import OS, CS, Mark, DB, Mode
 import pyperclip
 from console import fg, bg, fx
+from console.utils import *
 from abc import ABC, abstractmethod
 import string
+
 
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
@@ -370,12 +372,13 @@ class SetHardwareSettings(Command):
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
         \nНапример, если ввели "1" - Атол в режиме 1 ЮЛ, если "2 3" - Вики и Штрих в режиме 2ЮЛ\n""")
         try: 
+            
             kkm_positions = list(map(int, input().strip().split()))
             print("""\nВыберите 1 или 2 терминала: 
             \n0. None \n1. External \n2. Inpas\n3. Ingenico \n4. Sberbank\n""")
             terminal_positions = list(map(int, input().strip().split()))
         except(ValueError):
-            print(ERROR_FORMAT("Вместо цифр ввели какие-то буквы"))
+            print(ERROR_FORMAT("\nВместо цифр ввели какие-то буквы\n"))
             return
         if len(kkm_positions) == 0 or len(terminal_positions) == 0:
             print(ERROR_FORMAT("\nВы не указали ККТ или эквайринги\n\n"))
@@ -431,6 +434,7 @@ class UseScanner(Command):
             print("Какую марку вставить? Введите число:\n")
             print("0. Из буфера")
             Mark.print_marktypes()
+            clear_line()
             number = input().strip()
             if number not in string.digits:
                 print(ERROR_FORMAT("\nВы ввели не число\n\n"))
