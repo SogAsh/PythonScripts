@@ -31,10 +31,8 @@ class Mark():
     ]
 
     def print_marktypes():
-        text = ""
-        for index, (type, name) in enumerate(Mark.MARKTYPES):
-            text += str(index+1) + ". " + str(name) + "\n"
-        print(text)
+        for index, (_, name) in enumerate(Mark.MARKTYPES):
+            print(f"{str(index+1)}. {name}")
     
     def paste_mark_in_scanner_mode(product_type, mode: Mode):
         mark = Mark.get_mark(product_type, mode)
@@ -59,17 +57,19 @@ class Mark():
 
     def gen_mark(product_type):
         barcode = OS.get_from_local_json("barcode") 
-        if product_type == "Tabak": 
-            print("Какой нужен МРЦ в копейках?") 
-            price = int(input().strip()) 
-            return "0" + barcode + "-UWzSA8" + Mark.encode_price_for_mark(price) + OS.gen_random_string(5)
-        elif product_type == "Cis":
-            return "010" + barcode + "21" + OS.gen_random_string(13) + "93" +  OS.gen_random_string(13)
-        elif product_type == "Milk":
-            return "010" + barcode + "21" + OS.gen_random_string(8) + "93" + OS.gen_random_string(4)
-        elif product_type == "Furs":
-            return "RU-" + "430302-" + "ABC" + OS.get_random_numbers(7)
-        return Mark.get_mark_from_file(product_type) 
+        match product_type:
+            case "Tabak":
+                print("Какой нужен МРЦ в копейках?") 
+                price = int(input().strip()) 
+                return "0" + barcode + "-UWzSA8" + Mark.encode_price_for_mark(price) + OS.gen_random_string(5)
+            case "Cis":
+                return "010" + barcode + "21" + OS.gen_random_string(13) + "93" +  OS.gen_random_string(13)
+            case "Milk":
+                return "010" + barcode + "21" + OS.gen_random_string(8) + "93" + OS.gen_random_string(4)
+            case "Furs":
+                return "RU-" + "430302-" + "ABC" + OS.get_random_numbers(7)
+            case _:
+                return Mark.get_mark_from_file(product_type) 
         
 
     def get_mark_from_file(product_type):
@@ -79,19 +79,14 @@ class Mark():
             return lines[random.randrange(len(lines))].strip()
 
     def encode_price_for_mark(price): 
-        positions = [] 
-        while(True): 
-            positions.append(price % 80 ) 
-            price = price // 80  
-            if (price == 0):  
-                break 
-        leading_zeros = 4 - len(positions)
-        for _ in range(leading_zeros):
-            positions.append(0)
-        res = "" 
-        for number in range(len(positions) - 1, -1, -1): 
-            res += Mark.ALPHABET[positions[number]] 
-        return res
+        res = [' '] * 4 
+        positions = [0] * 4
+        for index in range(len(positions) - 1, -1, -1): 
+            if price != 0:
+                positions[index] = price % 80
+                price = price // 80  
+            res[index] = Mark.ALPHABET[positions[index]] 
+        return ''.join(res)
 
 class DB():
 

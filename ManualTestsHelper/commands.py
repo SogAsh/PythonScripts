@@ -433,7 +433,6 @@ class UseScanner(Command):
             print("Какую марку вставить? Введите число:\n")
             print("0. Из буфера")
             Mark.print_marktypes()
-            clear_line()
             number = input().strip()
             if number not in string.digits:
                 print(ERROR_FORMAT("\nВы ввели не число\n\n"))
