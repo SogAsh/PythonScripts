@@ -46,9 +46,9 @@ class Command(ABC):
         pass
 
     @staticmethod
-    def try_execute(func):
+    def try_execute(command, *params):
         try:
-            func()
+            command.execute(*params)
         except requests.ConnectionError as e:
             print(e.args[0])
             ERROR("Нет связи с сервером")
@@ -239,12 +239,10 @@ class GenToken(Command):
 
     @staticmethod
     def execute():
-        def func():
-            cashbox_id = DB().get_cashbox_id(True)
-            CS().gen_token(cashbox_id)
-            print(f"В вашем буфере обмена - новый токен для кассы: \n{cashbox_id}")
-            SUCCESS()
-        Command.try_execute(func)
+        cashbox_id = DB().get_cashbox_id(True)
+        CS().gen_token(cashbox_id)
+        print(f"В вашем буфере обмена - новый токен для кассы: \n{cashbox_id}")
+        SUCCESS()
 
 
 class GenGuid(Command):

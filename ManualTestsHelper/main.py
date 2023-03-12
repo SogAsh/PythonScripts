@@ -72,12 +72,12 @@ def console_mode():
             os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
         try:
             command = COMMAND_NAMES[cmd]
-            command.execute(*res[1:])
+            Command.try_execute(command, *res[1:])
         except KeyError:
             print(ERROR_FORMAT("\nКоманда не найдена\n\n"))
 
 def add_hotkey(key, command, params):
-    keyboard.add_hotkey(key, lambda: command.execute(*params))
+    keyboard.add_hotkey(key, lambda: Command.try_execute(command, *params))
 
 def add_hotstring(abbrev, phrase):
     keyboard.add_abbreviation(abbrev, phrase)

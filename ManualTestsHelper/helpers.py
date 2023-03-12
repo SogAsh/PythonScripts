@@ -360,6 +360,7 @@ class CS():
 
     def get_cashbox_settings_json(self, cashboxId):
         result = self.session.get(self.backend_url + self.V2_URL_TAIL + f'{cashboxId}/settings')
+        result.raise_for_status()
         CS.log_request(result)
         return json.loads(result.content)
 
@@ -367,6 +368,7 @@ class CS():
         settings_type = "backend" if backend else "app"
         self.session.headers['Content-Type'] = "application/json"
         result = self.session.post(self.backend_url + self.V2_URL_TAIL + f"{cashboxId}/settings/" + f"{settings_type}", data = json.dumps(settings))
+        result.raise_for_status()
         CS.log_request(result)
 
     def flip_settings(self, settings, settings_name, settings_type = "backendSettings"):
