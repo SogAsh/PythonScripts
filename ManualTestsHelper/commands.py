@@ -17,10 +17,8 @@ import string
 
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
-ERROR_FORMAT = bg.lightred + fg.black
-SUCCESS_FORMAT = bg.green + fg.black
-ERROR = lambda message = "При выполнении скрипта возникла ошибка": print(ERROR_FORMAT(f"\n{message}\n\n"))
-SUCCESS = lambda message = "Скрипт завершился успешно": print(SUCCESS_FORMAT(f"\n{message}\n\n"))
+ERROR = lambda message = "При выполнении скрипта возникла ошибка": print((bg.lightred + fg.black)(f"\n{message}\n\n"))
+SUCCESS = lambda message = "Скрипт завершился успешно": print((bg.green + fg.black)(f"\n{message}\n\n"))
 file_change_style = fg.lightblack + fx.italic
 
 class Command(ABC): 
@@ -73,16 +71,18 @@ class TurnOffCashbox(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + "\n" + f"У команды '{TurnOffCashbox.name()}' один аргумент: " 
-        + "1 - остановить службу, 0 - запустить")
+        print(message + f"У команды '{TurnOffCashbox.name()}' один аргумент: " 
+        + "1 - остановить службу, 0 - запустить\n")
 
     @staticmethod
     def execute(*params):
         if (len(params) != 1):
-            TurnOffCashbox.help(ERROR_FORMAT("Неверное количество параметров"))
+            ERROR("Неверное количество параметров")
+            TurnOffCashbox.help()
             return
         if (params[0] not in ["0", "1"]):
-            TurnOffCashbox.help(ERROR_FORMAT("Неверный аргумент"))
+            ERROR("Неверный аргумент")
+            TurnOffCashbox.help()
             return
         should_stop = bool(int(params[0]))
         try:
@@ -107,16 +107,18 @@ class SetStage(Command):
 
     @staticmethod
     def help(message):
-        print(message + "\n" + f"У команды '{SetStage.name()}' один аргумент: " 
-        + "1 - первый стейдж, 2 - второй, 9 - прод")
+        print(message + f"У команды '{SetStage.name()}' один аргумент: " 
+        + "1 - первый стейдж, 2 - второй, 9 - прод\n")
 
     @staticmethod
     def execute(*params):
         if (len(params) != 1):
-            SetStage.help(ERROR_FORMAT("Неверное количество параметров"))
+            ERROR("Неверное количество параметров")
+            SetStage.help()
             return
         if (params[0] not in ["0", "1", "9"]):
-            SetStage.help(ERROR_FORMAT("Неверный аргумент"))
+            ERROR("Неверный аргумент")
+            SetStage.help()
             return
 
         stage = params[0]
@@ -142,8 +144,8 @@ class GetCashboxId(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + "\n" + f"У команды '{GetCashboxId.name()}' нет аргументов:\n" 
-        + "Текущий cashboxId попадает в буфер из локальной БД")
+        print(message + f"У команды '{GetCashboxId.name()}' нет аргументов:\n" 
+        + "Текущий cashboxId попадает в буфер из локальной БД\n")
 
     @staticmethod
     def execute():
@@ -170,8 +172,8 @@ class CacheCashboxId(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + "\n" + f"У команды '{CacheCashboxId.name()}' нет аргументов:\n" 
-        + "CashboxId вставлется из буфера обмена")
+        print(message + f"У команды '{CacheCashboxId.name()}' нет аргументов:\n" 
+        + "CashboxId вставлется из буфера обмена\n")
 
     @staticmethod
     def execute():
@@ -193,16 +195,18 @@ class DeleteCashbox(Command):
 
     @staticmethod
     def help(message):
-        print(message + "\n" + f"У команды '{DeleteCashbox.name()}' два аргумента: " 
-        + "1. 1 - удалить БД, 0 - не удалять \n 2. 1 - удалить КМК, 0 - не удалять")
+        print(message + f"У команды '{DeleteCashbox.name()}' два аргумента: " 
+        + "1. 1 - удалить БД, 0 - не удалять \n 2. 1 - удалить КМК, 0 - не удалять\n")
 
     @staticmethod
     def execute(*params):
         if (len(params) != 2):
-            DeleteCashbox.help(ERROR_FORMAT("Неверное количество параметров"))
+            ERROR("Неверное количество параметров")
+            DeleteCashbox.help()
             return
         if (params[0] not in ["0", "1"] or params[1] not in ["0", "1"]):
-            DeleteCashbox.help(ERROR_FORMAT("Неверный аргумент"))
+            ERROR("Неверный аргумент")
+            DeleteCashbox.help()
             return
         delete_db = bool(int(params[0]))
         delete_cashbox = bool(int(params[1]))
@@ -234,8 +238,8 @@ class GenToken(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + "\n" + f"У команды '{GenToken.name()}' нет аргументов:\n" 
-        + "СashboxId для запроса на КС берётся из локальной базы")
+        print(message + f"У команды '{GenToken.name()}' нет аргументов:\n" 
+        + "СashboxId для запроса на КС берётся из локальной базы\n")
 
     @staticmethod
     def execute():
@@ -258,8 +262,8 @@ class GenGuid(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + "\n" + f"У команды '{GenGuid.name()}' нет аргументов:\n" 
-        + "это нехитрая команда")
+        print(message + f"У команды '{GenGuid.name()}' нет аргументов:\n" 
+        + "это нехитрая команда\n")
 
     @staticmethod
     def execute():
@@ -281,13 +285,14 @@ class SetShiftDuration(Command):
 
     @staticmethod
     def help(message):
-        print(message + "\n" + f"У команды '{SetShiftDuration.name()}' один аргумент: " 
-        + "желаемое количество часов в смене")
+        print(message + f"У команды '{SetShiftDuration.name()}' один аргумент: " 
+        + "желаемое количество часов в смене\n")
 
     @staticmethod
     def execute(*params):
         if (len(params) != 1):
-            SetShiftDuration.help(ERROR_FORMAT("Неверное количество параметров"))
+            ERROR("Неверное количество параметров")
+            SetShiftDuration.help()
             return
         try:
             duration_in_hours = int(params[0])
@@ -314,8 +319,8 @@ class UnregLastReceipt(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + "\n" + f"У команды '{UnregLastReceipt.name()}' нет аргументов:\n" 
-        + "Незарегистрированным становится последний чек")
+        print(message + f"У команды '{UnregLastReceipt.name()}' нет аргументов:\n" 
+        + "Незарегистрированным становится последний чек\n")
 
     @staticmethod
     def execute():
@@ -345,13 +350,14 @@ class FlipSettings(Command):
 
     @staticmethod
     def help(message):
-        print(message + "\n" + f"У команды '{FlipSettings.name()}' один аргумент: " 
-        + "название настройки. Например, moveRemainsToNextShift или prepaidEnabled")
+        print(message + f"У команды '{FlipSettings.name()}' один аргумент: " 
+        + "название настройки. Например, moveRemainsToNextShift или prepaidEnabled\n")
 
     @staticmethod
     def execute(*params):
         if (len(params) != 1):
-            FlipSettings.help(ERROR_FORMAT("Неверное количество параметров"))
+            ERROR("Неверное количество параметров")
+            FlipSettings.help()
             return
         try:
             settings_name = params[0]
@@ -379,8 +385,8 @@ class SetHardwareSettings(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + "\n" + f"У команды '{SetHardwareSettings.name()}' нет аргументов:\n" 
-        + "Выбор техники происходит в консоли")
+        print(message + f"У команды '{SetHardwareSettings.name()}' нет аргументов:\n" 
+        + "Выбор техники происходит в консоли\n")
 
     @staticmethod
     def execute():
@@ -393,13 +399,13 @@ class SetHardwareSettings(Command):
             \n0. None \n1. External \n2. Inpas\n3. Ingenico \n4. Sberbank\n""")
             terminal_positions = list(map(int, input().strip().split()))
         except(ValueError):
-            print(ERROR_FORMAT("\nВместо цифр ввели какие-то буквы\n\n"))
+            ERROR("Вместо цифр ввели какие-то буквы")
             return
         if len(kkm_positions) == 0 or len(terminal_positions) == 0:
-            print(ERROR_FORMAT("\nВы не указали ККТ или эквайринги\n\n"))
+            ERROR("Вы не указали ККТ или эквайринги")
             return
         if len(kkm_positions) != len(terminal_positions):
-            print(ERROR_FORMAT("\nВы указали разное количество ККТ и терминалов\n\n"))
+            ERROR("Вы указали разное количество ККТ и терминалов")
             return
         try: 
             OS.change_cashbox_service_state(True)
@@ -432,16 +438,18 @@ class UseScanner(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + f"\n\nУ команды '{UseScanner.name()}' один аргумент: " 
-        + "normal - выбор марки, quiet - вставка прошлой марки")
+        print(message + f"У команды '{UseScanner.name()}' один аргумент: " 
+        + "normal - выбор марки, quiet - вставка прошлой марки\n")
 
     @staticmethod       
     def execute(*params):
         if (len(params) != 1):
-            UseScanner.help(ERROR_FORMAT("\nНеверное количество параметров"))
+            ERROR("Неверное количество параметров")
+            UseScanner.help()
             return
         if (params[0] not in ["normal", "quiet"]):
-            UseScanner.help(ERROR_FORMAT("\nНеверный аргумент"))
+            ERROR("Неверный аргумент")
+            UseScanner.help()
             return
         if params[0] == "quiet":
             Mark.paste_mark_in_scanner_mode("", Mode.QUIET)
@@ -451,11 +459,11 @@ class UseScanner(Command):
             Mark.print_marktypes()
             number = input().strip()
             if number not in string.digits:
-                print(ERROR_FORMAT("\nВы ввели не число\n\n"))
+                ERROR("Вы ввели не число")
                 return
             number = int(number)
             if number > len(Mark.MARKTYPES):
-                print(ERROR_FORMAT("\nНеверное число\n\n"))
+                ERROR("Неверное число")
                 return
             if number == 0:
                 Mark.paste_mark_in_scanner_mode("", Mode.CLIPBOARD)

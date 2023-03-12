@@ -52,7 +52,7 @@ HOTSTRINGS = [
 
 def main():
     set_title("ManualTestsHelper — Кассовые скрипты")
-    print(SUCCESS_FORMAT("\nГорячие клавиши готовы!\n\n"))
+    SUCCESS("Горячие клавиши готовы!")
     for key, command, params in HOTKEYS:
         add_hotkey(key, command, params)
     for key, _, value in HOTSTRINGS:
@@ -63,18 +63,16 @@ def main():
     restart_after_lock()    
 
 def console_mode():
-    print(SUCCESS_FORMAT("\nКонсольные команды ждут вас!\n\n"))        
+    SUCCESS("Консольные команды ждут вас!")    
     while(True):
         print_commands()
-        res = input().strip().split()
-        cmd = res[0]
-        if cmd == "exit":
+        args = input().strip().split()
+        if args[0] == "exit":
             os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
         try:
-            command = COMMAND_NAMES[cmd]
-            Command.try_execute(command, *res[1:])
+            Command.try_execute(COMMAND_NAMES[args[0]], *args[1:])
         except KeyError:
-            print(ERROR_FORMAT("\nКоманда не найдена\n\n"))
+            ERROR("Команда не найдена")
 
 def add_hotkey(key, command, params):
     keyboard.add_hotkey(key, lambda: Command.try_execute(command, *params))
