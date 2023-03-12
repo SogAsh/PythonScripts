@@ -1,7 +1,12 @@
+from multiprocessing import AuthenticationError
 import os
 import datetime
+from urllib.error import HTTPError
 import uuid
 import json
+
+from requests import RequestException
+import requests
 from helpers import OS, CS, Mark, DB, Mode
 import pyperclip
 from console import fg, bg, fx
@@ -14,8 +19,8 @@ KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
 ERROR_FORMAT = bg.lightred + fg.black
 SUCCESS_FORMAT = bg.green + fg.black
-ERROR = lambda: print(ERROR_FORMAT("\nПри выполнении скрипта возникла ошибка\n\n"))
-SUCCESS = lambda: print(SUCCESS_FORMAT("\nСкрипт завершился успешно\n\n"))
+ERROR = lambda message = "При выполнении скрипта возникла ошибка": print(ERROR_FORMAT(f"\n{message}\n\n"))
+SUCCESS = lambda message = "Скрипт завершился успешно": print(SUCCESS_FORMAT(f"\n{message}\n\n"))
 file_change_style = fg.lightblack + fx.italic
 
 class Command(ABC): 
@@ -39,6 +44,20 @@ class Command(ABC):
     @abstractmethod 
     def execute(): 
         pass
+
+    @staticmethod
+    def try_execute(func):
+        try:
+            func()
+        except requests.ConnectionError as e:
+            print(e.args[0])
+            ERROR("Нет связи с сервером")
+        except requests.HTTPError as e:
+            print(e.args[0])
+            ERROR("Что-то не так с запросом")
+        except Exception as e:
+            print(e.args[0])
+            ERROR()
      
 
 class TurnOffCashbox(Command):
@@ -133,7 +152,7 @@ class GetCashboxId(Command):
             pyperclip.copy(cashbox_id)
             print(f"В вашем буфере обмена — текущий cashboxId: \n{cashbox_id}")
             SUCCESS()
-        except: 
+        except Exception as e: 
             print("Не удалось получить из базы CashboxId")
             ERROR()
 
@@ -220,14 +239,13 @@ class GenToken(Command):
 
     @staticmethod
     def execute():
-        try:
+        def func():
             cashbox_id = DB().get_cashbox_id(True)
             CS().gen_token(cashbox_id)
             print(f"В вашем буфере обмена - новый токен для кассы: \n{cashbox_id}")
             SUCCESS()
-        except:
-            print("Не удалось сгенерировать токен. Возможно, не подключен VPN Контура")
-            ERROR()
+        Command.try_execute(func)
+
 
 class GenGuid(Command):
 

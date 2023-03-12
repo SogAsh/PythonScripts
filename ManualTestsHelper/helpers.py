@@ -88,16 +88,17 @@ class Mark():
             res[index] = Mark.ALPHABET[positions[index]] 
         return ''.join(res)
 
+
 class DB():
 
 
     def __init__(self):
-        self.con = self.set_db_connection()
-        self.cur = self.con.cursor()
-
-    def set_db_connection(self):
-        return sqlite3.connect(os.path.join(OS.find_cashbox_path(), "db", "db.db"))
-
+        try:
+            self.con = sqlite3.connect(os.path.join(OS.find_cashbox_path(), "db", "db.db"))
+            self.cur = self.con.cursor()   
+        except sqlite3.OperationalError:
+            self.bred = ""
+            print("\nФайла БД нет на ПК, операции с БД невозможны\n")
 
     def update_products_with_pattern(self, products, legalEntityId, pattern="", should_print_name = False): 
         no_products_set = True 
@@ -128,9 +129,8 @@ class DB():
             self.con.close()
 
     def get_last_receipt(self, final_query = False):
-        cur = self.con.cursor()
-        cur.execute("SELECT * FROM Receipt")
-        result = cur.fetchall()[-1] #id, shiftid, number, content
+        self.cur.execute("SELECT * FROM Receipt")
+        result = self.cur.fetchall()[-1] #id, shiftid, number, content
         if final_query:
             self.con.close()
         return result
@@ -143,10 +143,10 @@ class DB():
             self.con.close()
 
     def get_cashbox_id(self, final_query = False):
+        if (not hasattr(self, "cur")):
+            return OS.get_from_local_json("cashboxId")
         self.cur.execute("select * FROM CashboxState")
         cashbox_id = self.cur.fetchall()[0][1]
-        if cashbox_id == None: 
-            return OS.get_from_local_json("cashboxId")
         OS.cache_in_local_json("cashboxId", cashbox_id)
         if (final_query):
             self.con.close()
@@ -187,6 +187,9 @@ class OS():
     @staticmethod
     def delete_folder(file_path, retries = 5):
         OS.close_sqlite()
+        if not os.path.exists(file_path):
+            print(f"\nНа ПК уже нет папки: {file_path}\n")
+            return
         for i in range (retries):
             try:
                 shutil.rmtree(file_path)
@@ -194,7 +197,7 @@ class OS():
                 pass
             time.sleep(1)
             if not os.path.exists(file_path):
-                print(f"Удалили: {file_path}\n")
+                print(f"\nУдалили: {file_path}\n")
                 return    
 
     @staticmethod
@@ -207,7 +210,7 @@ class OS():
             kontur_path = os.path.join(path, "SKBKontur")
             if os.path.exists(kontur_path):
                 return os.path.join(kontur_path, "Cashbox")
-        print(f"Не удалось найти папку Cashbox на жёстких дисках {OS.get_from_local_json('diskDrives')}")
+        print(f"Не удалось найти папку Cashbox на дисках: {OS.get_from_local_json('diskDrives')}. Добавьте название своего диска в файл ManualTestsHelper/data.json")
         input()
         return ""
 
@@ -299,18 +302,15 @@ class CS():
         session.headers['Accept'] = "application/json"
         return session
 
-    def gen_token(self, cashbox_id, attempts = 5):
+    def gen_token(self, cashbox_id):
         self.session.headers['Content-Type'] = "application/json"
         url = self.backend_url + self.V1_URL_TAIL + f"{cashbox_id}/resetPassword"
-        for i in range(attempts):
-            token = str(random.randrange(11111111, 99999999))
-            data = json.dumps({"Token" : token})
-            result = self.session.post(url, data = data)
-            print(f"Результат запроса {cashbox_id}/resetPassword: {result}")
-            if result.ok: 
-                pyperclip.copy(f"{token}")
-                print(f"\nТокен: {token}\n")
-                break
+        token = str(random.randrange(11111111, 99999999))
+        result = self.session.post(url, data = json.dumps({"Token" : token}))
+        result.raise_for_status()
+        CS.log_request(result)
+        pyperclip.copy(f"{token}")
+        print(f"\nТокен: {token}\n")
 
     def change_hardware_settings(self, cashbox_id, kkt: list, pos: list):
         settings = self.get_cashbox_settings_json(cashbox_id)
@@ -368,11 +368,6 @@ class CS():
         self.session.headers['Content-Type'] = "application/json"
         result = self.session.post(self.backend_url + self.V2_URL_TAIL + f"{cashboxId}/settings/" + f"{settings_type}", data = json.dumps(settings))
         CS.log_request(result)
-        
-    def log_request(result):
-        print(result.request.method, result.url, sep=' ')
-        print(result.reason, result.status_code, sep=' ')
-        print()
 
     def flip_settings(self, settings, settings_name, settings_type = "backendSettings"):
         settings["settings"][settings_type][settings_name] = not settings["settings"][settings_type][settings_name]
@@ -380,3 +375,7 @@ class CS():
         result["settings"] = settings["settings"][settings_type]
         result["previousVersion"] = settings["versions"]["backendVersion"]
         return result
+
+    def log_request(result):
+        print(result.request.method, result.url, sep=' ')
+        print(result.status_code, result.reason, sep=' ')

@@ -60,7 +60,7 @@ def main():
     keyboard.add_hotkey("alt+h", lambda: print_hotkeys())
     keyboard.add_hotkey("alt+q", lambda: console_mode())
     print_hotkeys()
-    restartAfterLocking()    
+    restart_after_lock()    
 
 def console_mode():
     print(SUCCESS_FORMAT("\nКонсольные команды ждут вас!\n\n"))        
@@ -107,19 +107,19 @@ def print_commands():
     print(format.format("exit", "Выйти в меню скриптов"))
     print("\n ") 
 
-def isScreenLocked():
+def is_screen_locked():
     process_name='LogonUI.exe'
     outputall=subprocess.check_output('TASKLIST')
     if process_name in str(outputall):
         return True
     return False
 
-def restartAfterLocking():
-    while not isScreenLocked():
-            time.sleep(5)
+def restart_after_lock():
+    while not is_screen_locked():
+        time.sleep(5)
     while(True):
         time.sleep(1)
-        if not isScreenLocked():
+        if not is_screen_locked():
             print("Перезапуск после блокировки...\n")
             os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
