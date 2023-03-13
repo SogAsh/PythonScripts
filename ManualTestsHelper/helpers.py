@@ -247,11 +247,10 @@ class OS():
             else: 
                 data["settings"][0]["loyaltyCashboxClientUrl"] = "https://market.testkontur.ru/loyaltyCashboxApi"
                 data["settings"][0]["cashboxBackendUrl"] = "https://market.testkontur.ru"
-
-        newJson = json.dumps(data, indent=4)
-        file.seek(0)
-        file.write(newJson)
-        file.truncate()   
+            newJson = json.dumps(data, indent=4)
+            file.seek(0)
+            file.write(newJson)
+            file.truncate()   
         OS.change_cashbox_service_state(False)
 
 
@@ -379,5 +378,6 @@ class CS():
         return result
 
     def log_request(result):
+        print()
         print(result.request.method, result.url, sep=' ')
         print(result.status_code, result.reason, sep=' ')

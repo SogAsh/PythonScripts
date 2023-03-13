@@ -37,7 +37,12 @@ class Command(ABC):
     @abstractmethod 
     def help(): 
         pass 
- 
+
+    @staticmethod
+    @abstractmethod     
+    def get_expected_params():
+        pass
+
     @staticmethod
     @abstractmethod 
     def execute(): 
@@ -46,7 +51,8 @@ class Command(ABC):
     @staticmethod
     def try_execute(command, *params):
         try:
-            command.execute(*params)
+            if Command.check_params(command, *params):
+                command.execute(*params)
         except requests.ConnectionError as e:
             print(e.args[0])
             ERROR("Нет связи с сервером")
@@ -56,7 +62,27 @@ class Command(ABC):
         except Exception as e:
             print(e.args[0])
             ERROR()
-     
+
+    @staticmethod
+    def check_params(command, *params):
+        expected_params = command.get_expected_params()
+        if (len(params) != len(expected_params)):
+            command.help()
+            ERROR("Неверное количество параметров")
+            return False
+        if command == SetShiftDuration:
+            if not params[0].isdigit():
+                command.help()
+                ERROR("Неправильно указали количество часов")
+                return False
+            else: 
+                return True
+        for expected_param, param in zip(expected_params, params):
+            if param not in expected_param:
+                command.help()
+                ERROR("Неверный аргумент")
+                return False
+        return True
 
 class TurnOffCashbox(Command):
 
@@ -71,19 +97,14 @@ class TurnOffCashbox(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + f"У команды '{TurnOffCashbox.name()}' один аргумент: " 
-        + "1 - остановить службу, 0 - запустить\n")
+        print(message + f"\nУ команды '{TurnOffCashbox.name()}' один аргумент: " 
+        + "1 - остановить службу, 0 - запустить")
+
+    @staticmethod
+    def get_expected_params(): return [["0", "1"]]
 
     @staticmethod
     def execute(*params):
-        if (len(params) != 1):
-            ERROR("Неверное количество параметров")
-            TurnOffCashbox.help()
-            return
-        if (params[0] not in ["0", "1"]):
-            ERROR("Неверный аргумент")
-            TurnOffCashbox.help()
-            return
         should_stop = bool(int(params[0]))
         try:
             OS.change_cashbox_service_state(should_stop)
@@ -106,27 +127,21 @@ class SetStage(Command):
         return "Выбор стейджа для кассы: 1 или 2"
 
     @staticmethod
-    def help(message):
-        print(message + f"У команды '{SetStage.name()}' один аргумент: " 
-        + "1 - первый стейдж, 2 - второй, 9 - прод\n")
+    def help(message = ""):
+        print(message + f"\nУ команды '{SetStage.name()}' один аргумент: " 
+        + "1 - первый стейдж, 2 - второй, 9 - прод")
+    
+    @staticmethod
+    def get_expected_params(): return [["1", "2", "9"]]
 
     @staticmethod
     def execute(*params):
-        if (len(params) != 1):
-            ERROR("Неверное количество параметров")
-            SetStage.help()
-            return
-        if (params[0] not in ["0", "1", "9"]):
-            ERROR("Неверный аргумент")
-            SetStage.help()
-            return
-
         stage = params[0]
         try:      
             OS.change_staging_in_config(int(stage), OS.find_config_path())
             print(f"Касса готова к работе с {stage + ' стейджем' if stage != '9' else ' продом'}")
             SUCCESS() 
-        except: 
+        except Exception as e: 
             print(f"Не удалось переключить стейдж. Проверьте, в каком состоянии служба кассы")
             ERROR()
             
@@ -144,11 +159,14 @@ class GetCashboxId(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + f"У команды '{GetCashboxId.name()}' нет аргументов:\n" 
-        + "Текущий cashboxId попадает в буфер из локальной БД\n")
+        print(message + f"\nУ команды '{GetCashboxId.name()}' нет аргументов: " 
+        + "текущий cashboxId попадает в буфер из локальной БД")
 
     @staticmethod
-    def execute():
+    def get_expected_params(): return []
+
+    @staticmethod
+    def execute(*params):
         try: 
             cashbox_id = DB().get_cashbox_id(True)
             pyperclip.copy(cashbox_id)
@@ -172,11 +190,14 @@ class CacheCashboxId(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + f"У команды '{CacheCashboxId.name()}' нет аргументов:\n" 
-        + "CashboxId вставлется из буфера обмена\n")
+        print(message + f"\nУ команды '{CacheCashboxId.name()}' нет аргументов: " 
+        + "сashboxId вставлется из буфера обмена")
 
     @staticmethod
-    def execute():
+    def get_expected_params(): return []
+
+    @staticmethod
+    def execute(*params):
         cashbox_id = pyperclip.paste()
         OS.cache_in_local_json("cashboxId", cashbox_id)
         print(f"Вы вставили из буфера в data.json cashboxId = \n{cashbox_id}")
@@ -194,20 +215,15 @@ class DeleteCashbox(Command):
         return "Удалить кассу (0 1) или БД (1 0)"
 
     @staticmethod
-    def help(message):
-        print(message + f"У команды '{DeleteCashbox.name()}' два аргумента: " 
-        + "1. 1 - удалить БД, 0 - не удалять \n 2. 1 - удалить КМК, 0 - не удалять\n")
+    def help(message = ""):
+        print(message + f"\nУ команды '{DeleteCashbox.name()}' два аргумента: \n" 
+        + "1. 1 - удалить БД, 0 - не удалять \n 2. 1 - удалить КМК, 0 - не удалять")
+
+    @staticmethod
+    def get_expected_params(): return [["0", "1"], ["0", "1"]]
 
     @staticmethod
     def execute(*params):
-        if (len(params) != 2):
-            ERROR("Неверное количество параметров")
-            DeleteCashbox.help()
-            return
-        if (params[0] not in ["0", "1"] or params[1] not in ["0", "1"]):
-            ERROR("Неверный аргумент")
-            DeleteCashbox.help()
-            return
         delete_db = bool(int(params[0]))
         delete_cashbox = bool(int(params[1]))
         OS.change_cashbox_service_state(True)
@@ -238,11 +254,14 @@ class GenToken(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + f"У команды '{GenToken.name()}' нет аргументов:\n" 
-        + "СashboxId для запроса на КС берётся из локальной базы\n")
+        print(message + f"\nУ команды '{GenToken.name()}' нет аргументов: " 
+        + "cashboxId для запроса на КС берётся из локальной базы")
 
     @staticmethod
-    def execute():
+    def get_expected_params(): return []
+
+    @staticmethod
+    def execute(*params):
         cashbox_id = DB().get_cashbox_id(True)
         CS().gen_token(cashbox_id)
         print(f"В вашем буфере обмена - новый токен для кассы: \n{cashbox_id}")
@@ -262,11 +281,13 @@ class GenGuid(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + f"У команды '{GenGuid.name()}' нет аргументов:\n" 
-        + "это нехитрая команда\n")
+        print(message + f"\nУ команды '{GenGuid.name()}' нет аргументов")
 
     @staticmethod
-    def execute():
+    def get_expected_params(): return []
+
+    @staticmethod
+    def execute(*params):
         guid = str(uuid.uuid4())
         pyperclip.copy(guid)
         print(f"В вашем буфере - guid: \n{guid}")
@@ -284,16 +305,15 @@ class SetShiftDuration(Command):
         return "Установить длительность смены в часах"
 
     @staticmethod
-    def help(message):
-        print(message + f"У команды '{SetShiftDuration.name()}' один аргумент: " 
-        + "желаемое количество часов в смене\n")
+    def help(message = ""):
+        print(message + f"\nУ команды '{SetShiftDuration.name()}' один аргумент: " 
+        + "желаемое количество часов в смене")
+
+    @staticmethod
+    def get_expected_params(): return [list()]
 
     @staticmethod
     def execute(*params):
-        if (len(params) != 1):
-            ERROR("Неверное количество параметров")
-            SetShiftDuration.help()
-            return
         try:
             duration_in_hours = int(params[0])
             db = DB()
@@ -319,11 +339,14 @@ class UnregLastReceipt(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + f"У команды '{UnregLastReceipt.name()}' нет аргументов:\n" 
-        + "Незарегистрированным становится последний чек\n")
+        print(message + f"\nУ команды '{UnregLastReceipt.name()}' нет аргументов: " 
+        + "незарегистрированным становится последний чек")
 
     @staticmethod
-    def execute():
+    def get_expected_params(): return []
+
+    @staticmethod
+    def execute(*params):
         try:
             db = DB()
             (id, shiftId, number, content) = db.get_last_receipt()
@@ -349,16 +372,15 @@ class FlipSettings(Command):
         return "Изменить буллевую настройку"
 
     @staticmethod
-    def help(message):
-        print(message + f"У команды '{FlipSettings.name()}' один аргумент: " 
-        + "название настройки. Например, moveRemainsToNextShift или prepaidEnabled\n")
+    def help(message = ""):
+        print(message + f"\nУ команды '{FlipSettings.name()}' один аргумент: " 
+        + "название настройки. Например, moveRemainsToNextShift или prepaidEnabled")
+
+    @staticmethod
+    def get_expected_params(): return [["moveRemainsToNextShift", "prepaidEnabled"]]
 
     @staticmethod
     def execute(*params):
-        if (len(params) != 1):
-            ERROR("Неверное количество параметров")
-            FlipSettings.help()
-            return
         try:
             settings_name = params[0]
             cashbox_id = DB().get_cashbox_id(True)
@@ -385,11 +407,14 @@ class SetHardwareSettings(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + f"У команды '{SetHardwareSettings.name()}' нет аргументов:\n" 
-        + "Выбор техники происходит в консоли\n")
+        print(message + f"\nУ команды '{SetHardwareSettings.name()}' нет аргументов: " 
+        + "выбор техники происходит в консоли")
 
     @staticmethod
-    def execute():
+    def get_expected_params(): return []
+
+    @staticmethod
+    def execute(*params):
         print("""Выберите 1 или 2 ККТ: первая для ЮЛ с ИНН = 6699000000, вторая - для ЮЛ с ИНН = 992570272700
         \n0. None \n1. Atol \n2. VikiPrint\n3. Shtrih
         \nНапример, если ввели "1" - Атол в режиме 1 ЮЛ, если "2 3" - Вики и Штрих в режиме 2ЮЛ\n""")
@@ -438,19 +463,14 @@ class UseScanner(Command):
 
     @staticmethod
     def help(message = ""):
-        print(message + f"У команды '{UseScanner.name()}' один аргумент: " 
-        + "normal - выбор марки, quiet - вставка прошлой марки\n")
+        print(message + f"\nУ команды '{UseScanner.name()}' один аргумент: " 
+        + "normal - выбор марки, quiet - вставка прошлой марки")
+
+    @staticmethod
+    def get_expected_params(): return [["normal", "quiet"]]
 
     @staticmethod       
     def execute(*params):
-        if (len(params) != 1):
-            ERROR("Неверное количество параметров")
-            UseScanner.help()
-            return
-        if (params[0] not in ["normal", "quiet"]):
-            ERROR("Неверный аргумент")
-            UseScanner.help()
-            return
         if params[0] == "quiet":
             Mark.paste_mark_in_scanner_mode("", Mode.QUIET)
         else:
