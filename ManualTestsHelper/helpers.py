@@ -95,10 +95,22 @@ class DB():
     def __init__(self):
         try:
             self.con = sqlite3.connect(os.path.join(OS.find_cashbox_path(), "db", "db.db"))
-            self.cur = self.con.cursor()   
+            self.cur = self.con.cursor()
         except sqlite3.OperationalError:
-            self.bred = ""
-            print("\nФайла БД нет на ПК, операции с БД невозможны\n")
+            print("\nФайла БД нет на ПК\n")
+
+    def set_legalentityid_in_products(self, le, final_query = False):
+        self.cur.execute("SELECT * FROM Product")
+        products = self.cur.fetchall()
+        if len(products) != 0:
+            self.update_products_with_pattern(products, le[0], "")
+            if (len(le) > 1):
+                no_products_set = self.update_products_with_pattern(products, le[1], "_2ЮЛ", True)
+                if (no_products_set):
+                    self.update_products_with_pattern([products[0]], le[1], "", True)
+            self.con.commit()
+        if final_query:
+            self.con.close()
 
     def update_products_with_pattern(self, products, legalEntityId, pattern="", should_print_name = False): 
         no_products_set = True 
@@ -114,19 +126,6 @@ class DB():
                 except:
                     pass
         return no_products_set
-
-    def set_legalentityid_in_products(self, le, final_query = False):
-        self.cur.execute("SELECT * FROM Product")
-        products = self.cur.fetchall()
-        if len(products) != 0:
-            self.update_products_with_pattern(products, le[0], "")
-            if (len(le) > 1):
-                no_products_set = self.update_products_with_pattern(products, le[1], "_2ЮЛ", True)
-                if (no_products_set):
-                    self.update_products_with_pattern([products[0]], le[1], "", True)
-            self.con.commit()
-        if final_query:
-            self.con.close()
 
     def get_last_receipt(self, final_query = False):
         self.cur.execute("SELECT * FROM Receipt")
@@ -160,7 +159,7 @@ class DB():
             self.con.close()
         return shift
 
-    def edit_shift_in_db(self, content : str, final_query = False):
+    def edit_shift_in_db(self, content:str, final_query = False):
         cur = self.con.cursor()
         query = f"UPDATE shift SET Content = '{content}' WHERE Number == (SELECT MAX(Number) FROM shift)"
         cur.execute(query)
@@ -182,7 +181,7 @@ class OS():
         try:
             subprocess.call(["taskkill", "/f", "/im", "DB Browser for SQLite.exe"])
         except:
-            print("Не удалось закрыть SQLite")
+            pass
 
     @staticmethod
     def delete_folder(file_path, retries = 5):

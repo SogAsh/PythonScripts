@@ -1,18 +1,21 @@
+from cgi import print_exception
 from multiprocessing import AuthenticationError
 import os
 import datetime
 from urllib.error import HTTPError
 import uuid
 import json
+import traceback
 
 from requests import RequestException
 import requests
-from helpers import OS, CS, Mark, DB, Mode
+from helpers import OS, CS, Mark, DB, ScanMode
 import pyperclip
 from console import fg, bg, fx
 from console.utils import *
 from abc import ABC, abstractmethod
 import string
+
 
 
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
@@ -53,15 +56,15 @@ class Command(ABC):
         try:
             if Command.check_params(command, *params):
                 command.execute(*params)
+                SUCCESS()
         except requests.ConnectionError as e:
-            print(e.args[0])
-            ERROR("Нет связи с сервером")
+            Command.print_exception(command, "Нет связи с сервером")
         except requests.HTTPError as e:
-            print(e.args[0])
-            ERROR("Что-то не так с запросом")
+            Command.print_exception(command, "Что-то не так с запросом")
+        except AttributeError as e:
+            Command.print_exception(command, "На ПК не найдена база данных кассы")
         except Exception as e:
-            print(e.args[0])
-            ERROR()
+            Command.print_exception(command)
 
     @staticmethod
     def check_params(command, *params):
@@ -84,6 +87,13 @@ class Command(ABC):
                 return False
         return True
 
+    @staticmethod
+    def print_exception(command, message = ""):
+        print(traceback.format_exc())
+        print("Не удалось " + command.description().lower())
+        ERROR(message) if message != "" else ERROR()
+
+
 class TurnOffCashbox(Command):
 
 
@@ -93,7 +103,7 @@ class TurnOffCashbox(Command):
 
     @staticmethod
     def description():
-        return "Отключает (1) или включает (0) службу кассы"
+        return "Отключить (1) или включить (0) службу кассы"
 
     @staticmethod
     def help(message = ""):
@@ -106,13 +116,8 @@ class TurnOffCashbox(Command):
     @staticmethod
     def execute(*params):
         should_stop = bool(int(params[0]))
-        try:
-            OS.change_cashbox_service_state(should_stop)
-            print(f"\nВы {'остановили' if should_stop else 'запустили'} службу SKBKontur.Cashbox") 
-            SUCCESS()
-        except:
-            print(f"\nНе удалось {'остановить' if should_stop else 'запустить'} службу SKBKontur.Cashbox")
-            ERROR()
+        OS.change_cashbox_service_state(should_stop)
+        print(f"\nВы {'остановили' if should_stop else 'запустили'} службу SKBKontur.Cashbox") 
 
 
 class SetStage(Command):
@@ -124,7 +129,7 @@ class SetStage(Command):
 
     @staticmethod
     def description():
-        return "Выбор стейджа для кассы: 1 или 2"
+        return "Выбрать стейдж для кассы: 1 или 2"
 
     @staticmethod
     def help(message = ""):
@@ -136,15 +141,11 @@ class SetStage(Command):
 
     @staticmethod
     def execute(*params):
-        stage = params[0]
-        try:      
-            OS.change_staging_in_config(int(stage), OS.find_config_path())
-            print(f"Касса готова к работе с {stage + ' стейджем' if stage != '9' else ' продом'}")
-            SUCCESS() 
-        except Exception as e: 
-            print(f"Не удалось переключить стейдж. Проверьте, в каком состоянии служба кассы")
-            ERROR()
-            
+        stage = params[0]    
+        OS.change_staging_in_config(int(stage), OS.find_config_path())
+        print(f"Касса готова к работе с {stage + ' стейджем' if stage != '9' else ' продом'}")
+        SUCCESS() 
+    
 
 class GetCashboxId(Command):
 
@@ -167,14 +168,9 @@ class GetCashboxId(Command):
 
     @staticmethod
     def execute(*params):
-        try: 
-            cashbox_id = DB().get_cashbox_id(True)
-            pyperclip.copy(cashbox_id)
-            print(f"В вашем буфере обмена — текущий cashboxId: \n{cashbox_id}")
-            SUCCESS()
-        except Exception as e: 
-            print("Не удалось получить из базы CashboxId")
-            ERROR()
+        cashbox_id = DB().get_cashbox_id(True)
+        pyperclip.copy(cashbox_id)
+        print(f"В вашем буфере обмена — текущий cashboxId: \n{cashbox_id}")
 
 
 class CacheCashboxId(Command):
@@ -201,7 +197,7 @@ class CacheCashboxId(Command):
         cashbox_id = pyperclip.paste()
         OS.cache_in_local_json("cashboxId", cashbox_id)
         print(f"Вы вставили из буфера в data.json cashboxId = \n{cashbox_id}")
-        SUCCESS()
+
 
 class DeleteCashbox(Command):
 
@@ -217,7 +213,7 @@ class DeleteCashbox(Command):
     @staticmethod
     def help(message = ""):
         print(message + f"\nУ команды '{DeleteCashbox.name()}' два аргумента: \n" 
-        + "1. 1 - удалить БД, 0 - не удалять \n 2. 1 - удалить КМК, 0 - не удалять")
+        + "1. 1 - удалить БД, 0 - не удалять \n2. 1 - удалить КМК, 0 - не удалять")
 
     @staticmethod
     def get_expected_params(): return [["0", "1"], ["0", "1"]]
@@ -228,17 +224,12 @@ class DeleteCashbox(Command):
         delete_cashbox = bool(int(params[1]))
         OS.change_cashbox_service_state(True)
         cashbox_path = OS.find_cashbox_path()
-        try:
-            if delete_db:
-                OS.delete_folder(os.path.join(cashbox_path, "db"))
-                print("БД кассы удалена")
-            if delete_cashbox:
-                OS.delete_folder(os.path.join(cashbox_path, "bin"))
-                print("Приложение кассы удалено")
-            SUCCESS()
-        except:
-            print("Не удалось удалить папку")
-            ERROR()
+        if delete_db:
+            OS.delete_folder(os.path.join(cashbox_path, "db"))
+            print("БД кассы удалена")
+        if delete_cashbox:
+            OS.delete_folder(os.path.join(cashbox_path, "bin"))
+            print("Приложение кассы удалено")
 
 
 class GenToken(Command):
@@ -265,7 +256,6 @@ class GenToken(Command):
         cashbox_id = DB().get_cashbox_id(True)
         CS().gen_token(cashbox_id)
         print(f"В вашем буфере обмена - новый токен для кассы: \n{cashbox_id}")
-        SUCCESS()
 
 
 class GenGuid(Command):
@@ -291,7 +281,7 @@ class GenGuid(Command):
         guid = str(uuid.uuid4())
         pyperclip.copy(guid)
         print(f"В вашем буфере - guid: \n{guid}")
-        SUCCESS()
+
 
 class SetShiftDuration(Command):
 
@@ -314,17 +304,13 @@ class SetShiftDuration(Command):
 
     @staticmethod
     def execute(*params):
-        try:
-            duration_in_hours = int(params[0])
-            db = DB()
-            shift = json.loads(db.get_last_shift_from_db())
-            shift["openInfo"]["openDateTime"] = str(datetime.datetime.now() - datetime.timedelta(hours = duration_in_hours))
-            db.edit_shift_in_db(json.dumps(shift), True)
-            print(f"Длительность текущей смены = {duration_in_hours}")
-            SUCCESS()
-        except:
-            print("Не удалось изменить смену в БД")
-            ERROR()
+        duration_in_hours = int(params[0])
+        db = DB()
+        shift = json.loads(db.get_last_shift_from_db())
+        shift["openInfo"]["openDateTime"] = str(datetime.datetime.now() - datetime.timedelta(hours = duration_in_hours))
+        db.edit_shift_in_db(json.dumps(shift), True)
+        print(f"Длительность текущей смены = {duration_in_hours}")
+
 
 class UnregLastReceipt(Command):
 
@@ -347,18 +333,14 @@ class UnregLastReceipt(Command):
 
     @staticmethod
     def execute(*params):
-        try:
-            db = DB()
-            (id, shiftId, number, content) = db.get_last_receipt()
-            receipt = json.loads(content)
-            receipt["kkmRegistrationStatus"] = "Error"
-            receipt["correctionReceiptId"] = None
-            db.update_receipt_content(json.dumps(receipt), id, True)
-            print(f"Последний чек продажи стал незареганным. \nОн на сумму = {receipt['contributedSum']}")
-            SUCCESS()
-        except: 
-            print("Не удалось изменить чек в БД")
-            ERROR()
+        db = DB()
+        (id, shiftId, number, content) = db.get_last_receipt()
+        receipt = json.loads(content)
+        receipt["kkmRegistrationStatus"] = "Error"
+        receipt["correctionReceiptId"] = None
+        db.update_receipt_content(json.dumps(receipt), id, True)
+        print(f"Последний чек продажи стал незареганным. \nОн на сумму = {receipt['contributedSum']}")
+
 
 class FlipSettings(Command):
 
@@ -381,18 +363,13 @@ class FlipSettings(Command):
 
     @staticmethod
     def execute(*params):
-        try:
-            settings_name = params[0]
-            cashbox_id = DB().get_cashbox_id(True)
-            cs = CS()
-            settings = cs.get_cashbox_settings_json(cashbox_id)
-            flipped_settings = cs.flip_settings(settings, settings_name)
-            cs.post_cashbox_settings(cashbox_id, flipped_settings)
-            print(f'Настройка {settings_name} теперь = {settings["settings"]["backendSettings"][settings_name]}')
-            SUCCESS()
-        except: 
-            print("Не удалось изменить настройки. Возможно, не подключен VPN Контура")
-            ERROR()
+        settings_name = params[0]
+        cashbox_id = DB().get_cashbox_id(True)
+        cs = CS()
+        settings = cs.get_cashbox_settings_json(cashbox_id)
+        flipped_settings = cs.flip_settings(settings, settings_name)
+        cs.post_cashbox_settings(cashbox_id, flipped_settings)
+        print(f'Настройка {settings_name} теперь = {settings["settings"]["backendSettings"][settings_name]}')
 
 class SetHardwareSettings(Command):
 
@@ -432,23 +409,19 @@ class SetHardwareSettings(Command):
         if len(kkm_positions) != len(terminal_positions):
             ERROR("Вы указали разное количество ККТ и терминалов")
             return
-        try: 
-            OS.change_cashbox_service_state(True)
-            kkms = []
-            terminals = []
-            for i in range (len(kkm_positions)):
-                kkms.append(KKT[kkm_positions[i]])
-                terminals.append(POS[terminal_positions[i]])
-            db = DB()
-            cashbox_id = db.get_cashbox_id()
-            le = CS().change_hardware_settings(cashbox_id, kkms, terminals)
-            db.set_legalentityid_in_products(le, True)
-            OS.change_cashbox_service_state(False)
-            print(f"Ваши ККТ: {', '.join(kkms) }\nВаши терминалы: {', '.join(terminals)}")
-            SUCCESS()
-        except:
-            print("Не удалось установить настройки оборудования. Возможно, не подключен VPN Контура")
-            ERROR()
+        OS.change_cashbox_service_state(True)
+        kkms = []
+        terminals = []
+        for i in range (len(kkm_positions)):
+            kkms.append(KKT[kkm_positions[i]])
+            terminals.append(POS[terminal_positions[i]])
+        db = DB()
+        cashbox_id = db.get_cashbox_id()
+        le = CS().change_hardware_settings(cashbox_id, kkms, terminals)
+        db.set_legalentityid_in_products(le, True)
+        OS.change_cashbox_service_state(False)
+        print(f"Ваши ККТ: {', '.join(kkms) }\nВаши терминалы: {', '.join(terminals)}")
+
 
 class UseScanner(Command):
 
@@ -472,7 +445,7 @@ class UseScanner(Command):
     @staticmethod       
     def execute(*params):
         if params[0] == "quiet":
-            Mark.paste_mark_in_scanner_mode("", Mode.QUIET)
+            Mark.paste_mark_in_scanner_mode("", ScanMode.QUIET)
         else:
             print("Какую марку вставить? Введите число:\n")
             print("0. Из буфера")
@@ -486,8 +459,7 @@ class UseScanner(Command):
                 ERROR("Неверное число")
                 return
             if number == 0:
-                Mark.paste_mark_in_scanner_mode("", Mode.CLIPBOARD)
+                Mark.paste_mark_in_scanner_mode("", ScanMode.CLIPBOARD)
             else: 
-                Mark.paste_mark_in_scanner_mode(Mark.MARKTYPES[number - 1][0], Mode.NORMAL)
+                Mark.paste_mark_in_scanner_mode(Mark.MARKTYPES[number - 1][0], ScanMode.NORMAL)
         print("Код марки успешно введен в режиме сканера")
-        SUCCESS()
