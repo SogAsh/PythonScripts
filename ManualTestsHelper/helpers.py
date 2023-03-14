@@ -11,7 +11,7 @@ import string
 import requests
 from enum import Enum, auto
 
-class Mode(Enum):
+class ScanMode(Enum):
     NORMAL = auto()
     CLIPBOARD = auto()
     FILE = auto()
@@ -34,9 +34,9 @@ class Mark():
         for index, (_, name) in enumerate(Mark.MARKTYPES):
             print(f"{str(index+1)}. {name}")
     
-    def paste_mark_in_scanner_mode(product_type, mode: Mode):
+    def paste_mark_in_scanner_mode(product_type, mode: ScanMode):
         mark = Mark.get_mark(product_type, mode)
-        if mode != Mode.QUIET:
+        if mode != ScanMode.QUIET:
             keyboard.press_and_release("alt + tab")
         time.sleep(1)
         for i in range(len(mark)):
@@ -44,11 +44,11 @@ class Mark():
             time.sleep(0.01)
         print(f"\nМарка: {mark}\n")
 
-    def get_mark(product_type, mode:Mode):
+    def get_mark(product_type, mode:ScanMode):
         mark = ""
-        if mode == Mode.QUIET:
+        if mode == ScanMode.QUIET:
             mark = OS.get_from_local_json("lastMark")
-        elif mode == Mode.CLIPBOARD:
+        elif mode == ScanMode.CLIPBOARD:
             mark = pyperclip.paste()
         else:
             mark = Mark.gen_mark(product_type)

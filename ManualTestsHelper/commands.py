@@ -16,8 +16,6 @@ from console.utils import *
 from abc import ABC, abstractmethod
 import string
 
-
-
 KKT = ["None", "Atol", "VikiPrint", "Shtrih"]
 POS = ["None", "External", "Inpas", "Ingenico", "Sberbank"]
 ERROR = lambda message = "При выполнении скрипта возникла ошибка": print((bg.lightred + fg.black)(f"\n{message}\n\n"))
