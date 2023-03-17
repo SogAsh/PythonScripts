@@ -1,0 +1,274 @@
+{
+	"info": {
+		"_postman_id": "2b588ecb-2764-4d11-9219-d9264f1aa95c",
+		"name": "Delivery",
+		"description": "Для локального тестирования запрос выглядит так: http://localhost.dev.kontur.ru:6639/\nДля тестирования на 1-м стейджинге: https://market.deliveryclubintegration.testkontur.ru\nна 2-м стейджинге: https://market-dev.deliveryclubintegration.testkontur.ru/",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26054325"
+	},
+	"item": [
+		{
+			"name": "Получение меню",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-kontur-apikey",
+						"value": "d27ae6ad-185d-ec05-beea-4c8ccb1b1b45",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/menus/a10642de-2b25-47b6-a989-7890b14638c2",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"menus",
+						"a10642de-2b25-47b6-a989-7890b14638c2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Стоплисты",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-kontur-apikey",
+						"value": "d27ae6ad-185d-ec05-beea-4c8ccb1b1b45",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/stopLists/84fa5e45-76d1-4e0e-bf39-c8e1c7e5405a",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"stopLists",
+						"84fa5e45-76d1-4e0e-bf39-c8e1c7e5405a"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Создание заказа",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-kontur-apikey",
+						"value": "0eb2d40b-b551-7540-bfd4-dab5defc6a8f",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"originalOrderId\": \"8765689\",\r\n    \"preOrder\": true,\r\n    \"createdAt\": \"2023-03-10T12:00:00+0300\",\r\n    \"customer\": {\r\n        \"name\": \"Иванов Иван\",\r\n        \"phone\": \"+79031111111\",\r\n        \"email\": \"user@example.com\"\r\n    },\r\n    \"payment\": {\r\n        \"type\": \"cash\",\r\n        \"requiredMoneyChange\": \"3000\"\r\n    },\r\n    \"expeditionType\": \"delivery\",\r\n    \"delivery\": {\r\n        \"expectedTime\": \"2023-03-30T12:00:00+0300\",\r\n        \"address\": {\r\n            \"subway\": \"Москвоская\",\r\n            \"region\": \"Приморский\",\r\n            \"city\": {\r\n                \"name\": \"Питер\",\r\n                \"code\": \"812\"\r\n            },\r\n            \"street\": {\r\n                \"name\": \"улица Тверская\",\r\n                \"code\": \"1\"\r\n            },\r\n            \"houseNumber\": \"1\",\r\n            \"flatNumber\": \"23\",\r\n            \"entrance\": \"2\",\r\n            \"intercom\": \"24\",\r\n            \"floor\": \"25\",\r\n            \"coordinates\": {\r\n                \"latitude\": \"55.756994\",\r\n                \"longitude\": \"37.614006\"\r\n            }\r\n        }\r\n    },\r\n    \"pickup\": {\r\n        \"expectedTime\": \"2023-03-30T00:00:00+0300\",\r\n        \"taker\": \"courier\"\r\n    },\r\n    \"products\": [\r\n        {\r\n            \"id\": \"749ec326-450a-4220-b7bd-e5d8eeb7739b\",\r\n            \"name\": \"Бизнес ланч\",\r\n            \"price\": 150,\r\n            \"quantity\": 1,\r\n            \"promotionId\": \"5\",\r\n            \"ingredients\": []\r\n        }\r\n    ],\r\n    \"promotions\": [],\r\n    \"comment\": \"Дополнительная информация о заказе\",\r\n    \"price\": {\r\n        \"total\": 140,\r\n        \"deliveryFee\": 10,\r\n        \"discount\": 5\r\n    },\r\n    \"personsQuantity\": 1,\r\n    \"callCenter\": {\r\n        \"phone\": \"+79031111111\"\r\n    },\r\n    \"courier\": {\r\n        \"name\": \"Курьер\",\r\n        \"phone\": \"79031111112\"\r\n    },\r\n    \"partnerDiscountInfo\": {\r\n        \"totalDiscount\": \"10\",\r\n        \"partnerPayment\": \"10\",\r\n        \"dcPayment\": \"10\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/orders/{{order_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"orders",
+						"{{order_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Создание заказа Саша",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-kontur-apikey",
+						"value": "4b8f5f29-ebc5-48a3-c94b-a4ec69e77446",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"originalOrderId\": \"8765689\",\r\n    \"preOrder\": true,\r\n    \"createdAt\": \"2023-03-10T12:00:00+0300\",\r\n    \"customer\": {\r\n        \"name\": \"Иванов Иван\",\r\n        \"phone\": \"+79031111111\",\r\n        \"email\": \"user@example.com\"\r\n    },\r\n    \"payment\": {\r\n        \"type\": \"cash\",\r\n        \"requiredMoneyChange\": \"3000\"\r\n    },\r\n    \"expeditionType\": \"delivery\",\r\n    \"delivery\": {\r\n        \"expectedTime\": \"2023-03-30T12:00:00+0300\",\r\n        \"address\": {\r\n            \"subway\": \"Москвоская\",\r\n            \"region\": \"Приморский\",\r\n            \"city\": {\r\n                \"name\": \"Питер\",\r\n                \"code\": \"812\"\r\n            },\r\n            \"street\": {\r\n                \"name\": \"улица Тверская\",\r\n                \"code\": \"1\"\r\n            },\r\n            \"houseNumber\": \"1\",\r\n            \"flatNumber\": \"23\",\r\n            \"entrance\": \"2\",\r\n            \"intercom\": \"24\",\r\n            \"floor\": \"25\",\r\n            \"coordinates\": {\r\n                \"latitude\": \"55.756994\",\r\n                \"longitude\": \"37.614006\"\r\n            }\r\n        }\r\n    },\r\n    \"pickup\": {\r\n        \"expectedTime\": \"2023-03-30T00:00:00+0300\",\r\n        \"taker\": \"courier\"\r\n    },\r\n    \"products\": [\r\n        {\r\n            \"id\": \"9fca85a5-5d5a-4376-bfa3-479d82cee822\",\r\n            \"name\": \"Бизнес ланч\",\r\n            \"price\": 100,\r\n            \"quantity\": 1,\r\n            \"promotionId\": \"5\",\r\n            \"ingredients\": []\r\n        }\r\n    ],\r\n    \"promotions\": [],\r\n    \"comment\": \"Дополнительная информация о заказе\",\r\n    \"price\": {\r\n        \"total\": 140,\r\n        \"deliveryFee\": 10,\r\n        \"discount\": 5\r\n    },\r\n    \"personsQuantity\": 1,\r\n    \"callCenter\": {\r\n        \"phone\": \"+79031111111\"\r\n    },\r\n    \"courier\": {\r\n        \"name\": \"Курьер\",\r\n        \"phone\": \"79031111112\"\r\n    },\r\n    \"partnerDiscountInfo\": {\r\n        \"totalDiscount\": \"10\",\r\n        \"partnerPayment\": \"10\",\r\n        \"dcPayment\": \"10\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/orders/{{order_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"orders",
+						"{{order_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "получение заказа по идентификатору",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-kontur-apikey",
+						"value": "d27ae6ad-185d-ec05-beea-4c8ccb1b1b45",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/orders/{{order_id}}/727e3b07-7a7a-4f1c-a344-6f5fbe7f7899?x-kontur-apikey=a04f5a4b-499e-4b0f-6b82-1cffcf419930",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"orders",
+						"{{order_id}}",
+						"727e3b07-7a7a-4f1c-a344-6f5fbe7f7899"
+					],
+					"query": [
+						{
+							"key": "x-kontur-apikey",
+							"value": "a04f5a4b-499e-4b0f-6b82-1cffcf419930"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Обновление статуса заказа",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "x-kontur-apikey",
+						"value": "d27ae6ad-185d-ec05-beea-4c8ccb1b1b45",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"status\": \"accepted\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/orders/{{order_id}}/283434ad-a0ae-4c64-8951-9c17af57f07a",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"orders",
+						"{{order_id}}",
+						"283434ad-a0ae-4c64-8951-9c17af57f07a"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Отправка нотификации",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-kontur-apikey",
+						"value": "40169ff1-2f7e-30a6-1dfa-3f8ebf4db518",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"status\": \"accepted\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/notifications/81cd0de6-d2f5-4e97-b4c9-e17bca29bc52?x-kontur-apikey=d27ae6ad-185d-ec05-beea-4c8ccb1b1b45",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"notifications",
+						"81cd0de6-d2f5-4e97-b4c9-e17bca29bc52"
+					],
+					"query": [
+						{
+							"key": "x-kontur-apikey",
+							"value": "d27ae6ad-185d-ec05-beea-4c8ccb1b1b45"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "d27ae6ad-185d-ec05-beea-4c8ccb1b1b45",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://market-dev.deliveryclubintegration.testkontur.ru",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "4643bba4-2e24-46eb-be0c-84d6fe306065",
 		"name": "Новые запросы к КС",
-		"description": "# О Кассовом сервере\n\nКассовый сервер (КС) нужен для обмена данными между товароучетной системой и локальным кассовым ПО (касса).\n\nПредставляет собой *облачное* хранилище данных: \n* Справочники из товароучетной системы (Товары, Кассиры, Плитки, Скидки)\n* Документы с касс (Чеки продажи/возврата, Чеки коррекции, Документы внесения/выема наличности, Итоговые данные смен)\n* Логи\n\nДанные полезно хранить в облачном хранилище, чтобы в случае переустановки кассы восстановить данные для продолжения работы пользователя.\n\n# Передача справочников на КС\n\nПередача справочников из товароучетных систем на сервер устроена следующим образом:\nКаждый раз на КС передается только данные справочника, которые были добавлены или изменены в товароучетной системе. На КС не отправляются повторно одни и те же данные, тем самым минимизируя трафик передачи.\nРазницу вычисляет товароучетная система перед передачей данных на сервер. \n\nКаждой передаче справочника присваивается версия. Версия справочника - натуральное число, от нуля до бесконечности. Версия 0 означает, что справочник еще не загружен.\n\n# Передача справочников на кассу\n\nКасса запрашивает последнюю версию справочника на сервере. Если последняя версия справочника отличается от той, \nчто используется на кассе, то кассой инициируется процедура получения последнего справочника.\n\nСервер умеет отдавать разницу только между двумя соседними версиями справочников.\n\nЕсли последняя версия справочника на сервере отличается больше чем на единицу от версии справочника на кассе, то кассе нужно сделать столько запросов на сервер, сколько разница между версиями.\n\nПосле успешного получения новой версии справочника, касса отправляет на сервер принятую версию справочника, сигнализируя серверу, что новая версия успешно получена. \n\n# Авторизация\n\n## Создание новой кассы в товароучетной системе\n\nИз товароучетной системы отправляется запрос на КС для создания новой кассы.\n\n\nПри успешном создании кассы КС возвращает ответ `200 ОК` и создает сущность новой кассы.\n\nДля дальнейшего взаимодействия с кассой нужно прописывать в запросах id кассы.\n\n## Запросы к КС\n\nАвторизация запросов товароучетных систем к REST API происходит при помощи HTTP Basic Auth.\n\nВо всех запросах необходимо передавать заголовок `Authorization: Basic <Base64(login:password)>`\n\nПару (login:password) необходимо получить у разработчиков сервиса Контур.Касса.\n",
+		"description": "## О коллекции в Постмане\n\nКоллекцию поддерживают в актуальном состоянии тестировщики Маркет.Кассы. Она размещена в командном пространстве, где все участники могут работать одновременно. Для этого нужно соблюдать несколько принципов:\n\n1. В текущих переменных коллекции \"Новые запросы к КС\" можно менять CurrentValue на свои значения: CurrentValue уникальные для каждого пользователя. Но нельзя трогать InitialValue - так вы можете помешать другим тестировщикам, а также сломать скрипты из prerequests-scripts.\n2. При добавлении новых функций делаем так, чтобы ими могли пользоваться другие. Для новых переменных как раз задаем InitialValue. И проверяем на дополнительном аккаунте, что функции действительно работают не только у вас.\n3. Если хочется поэкспериментировать с коллекцией - форкаем её в свое личное пространство (или экспортируем/импортируем себе).\n    \n\nСейчас есть такие фичи (и пользоваться ими можно, меняя CurrentValue)\n\n1. Переключение между стейджами. Просто замените в переменной base_url с market.testkontur на market-dev.testkontur - и все запросы будут отправляться на второй КС.\n2. Отправка запросов перед выполнением текущего запроса. Заходим в prerequests-scripts и достаём значение переменной prepare_request. Это не простая переменная, а функция. Чтобы превратить её из строки в функцию, используем eval. Выглядит это так: eval(pm.collectionVariables.get(\"prepare_request\")); Дальше мы вызываем функцию, которой передаём соответствующий хвост (часть запроса после cashbox/cashboxId). Выглядит так: pm.sendRequest(prepareRequest('shift'), (error, response) => {do something}); Пример - посмотрите в prerequest-scripts в запросах \"Чеки из последней смены\" и \"Создать кассира в один клик\".\n3. Представление json в виде таблицы. Пример - смотрите в Tests в запросе \"Чеки из последней смены\"\n    \n\n## О Кассовом сервере\n\nКассовый сервер (КС) нужен для обмена данными между товароучетной системой и локальным кассовым ПО (касса).\n\nПредставляет собой _облачное_ хранилище данных:\n\n- Справочники из товароучетной системы (Товары, Кассиры, Плитки, Скидки)\n- Документы с касс (Чеки продажи/возврата, Чеки коррекции, Документы внесения/выема наличности, Итоговые данные смен)\n- Логи\n    \n\n## Передача справочников на КС\n\nКаждый раз на КС передается только данные справочника, которые были добавлены или изменены в товароучетной системе. На КС не отправляются повторно одни и те же данные, тем самым минимизируя трафик передачи.  \nРазницу вычисляет товароучетная система перед передачей данных на сервер.\n\nКаждой передаче справочника присваивается версия. Версия справочника - натуральное число, от нуля до бесконечности. Версия 0 означает, что справочник еще не загружен.\n\n## Передача справочников на кассу\n\nКасса запрашивает последнюю версию справочника на сервере. Если последняя версия справочника отличается от той,  \nчто используется на кассе, то кассой инициируется процедура получения последнего справочника.\n\nСервер умеет отдавать разницу только между двумя соседними версиями справочников.\n\nЕсли последняя версия справочника на сервере отличается больше чем на единицу от версии справочника на кассе, то кассе нужно сделать столько запросов на сервер, сколько разница между версиями.\n\nПосле успешного получения новой версии справочника, касса отправляет на сервер принятую версию справочника, сигнализируя серверу, что новая версия успешно получена.\n\n## Авторизация\n\n### Создание новой кассы в товароучетной системе\n\nИз товароучетной системы отправляется запрос на КС для создания новой кассы.\n\nПри успешном создании кассы КС возвращает ответ `200 ОК` и создает сущность новой кассы.\n\nДля дальнейшего взаимодействия с кассой нужно прописывать в запросах id кассы.\n\n### Запросы к КС\n\nАвторизация запросов товароучетных систем к REST API происходит при помощи HTTP Basic Auth. Во всех запросах необходимо передавать заголовок `Authorization: Basic`",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "26054325"
 	},
@@ -24,28 +24,16 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/product",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/product",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"product"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Метод для ручного тестирования, диагностики проблем на кассе"
@@ -71,28 +59,16 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/product",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/product",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"product"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Касса генерирует эвент (CatalogUploaded) в ленту событий для оповещения товароучетной системы, что номенклатура успешно загружена"
@@ -110,30 +86,18 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/product/version/latest",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/product/version/latest",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"product",
 										"version",
 										"latest"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -150,30 +114,18 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/product/version/used",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/product/version/used",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"product",
 										"version",
 										"used"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Метод для ручного тестирования, диагностики проблем на кассе"
@@ -222,28 +174,16 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/productBalance",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/productBalance",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"productBalance"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -283,35 +223,23 @@
 									"raw": "{\r\n    \"previousVersion\": 1,\r\n    \"diff\": {\r\n        \"Deleted\": [],\r\n        \"Updated\": [{\r\n            \"id\": \"ed0dddf2-c2b2-4160-9ece-4a9e03b2e828\",\r\n            \"balance\": 557.0\r\n        }]\r\n    }\r\n}"
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/productBalance",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/productBalance",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"productBalance"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": ""
-										}
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "Текущие остатки по всем товарным позициям указанной ТТ (запрос в BalancesService)",
+							"name": "БС: остатки по товарным позициям ТТ (запрос в BalancesService)",
 							"request": {
 								"method": "GET",
 								"header": [
@@ -381,28 +309,16 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/kitchenStation",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/kitchenStation",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"kitchenStation"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Запрашиваются все существующие кассы с КС"
@@ -435,28 +351,16 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/dish",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/dish",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"dish"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Запрашиваются все существующие кассы с КС"
@@ -498,28 +402,16 @@
 									}
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/dish",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/dish",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"dish"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": ""
-										}
 									]
 								},
 								"description": "Запрашиваются все существующие кассы с КС"
@@ -561,28 +453,16 @@
 									}
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/kitchenStation",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/kitchenStation",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"kitchenStation"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": ""
-										}
 									]
 								},
 								"description": "Запрашиваются все существующие кассы с КС"
@@ -606,27 +486,15 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/state",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/state",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"state"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -644,28 +512,16 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/state/documentFetched",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/state/documentFetched",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"state",
 										"documentFetched"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "4db47fff-6474-41e9-9636-5e53125c5804"
-										}
 									]
 								}
 							},
@@ -683,28 +539,16 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/state/updateServiceSubscription",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/state/updateServiceSubscription",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"state",
 										"updateServiceSubscription"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "4db47fff-6474-41e9-9636-5e53125c5804"
-										}
 									]
 								}
 							},
@@ -722,28 +566,16 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/ping/",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/ping/",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"ping",
 										""
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -760,29 +592,17 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/settings/version/latest",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/settings/version/latest",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"settings",
 										"version",
 										"latest"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "5c4c9a6a-fede-4c5f-8e54-548ae5ba3b01"
-										}
 									]
 								},
 								"description": "Метод для ручного тестирования"
@@ -800,29 +620,17 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/settings/version/used",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/settings/version/used",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"settings",
 										"version",
 										"used"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -839,29 +647,17 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/settings/version/used",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/settings/version/used",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"settings",
 										"version",
 										"used"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -878,17 +674,11 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox"
 									]
@@ -908,26 +698,14 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
+										"{{cashboxId}}"
 									]
 								}
 							},
@@ -952,26 +730,14 @@
 									"raw": "Данные для создания"
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
+										"{{cashboxId}}"
 									]
 								}
 							},
@@ -992,27 +758,15 @@
 									}
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/resetPassword",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/resetPassword",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"resetPassword"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -1033,27 +787,15 @@
 									"formdata": []
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/delete",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/delete",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"delete"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "После отвязки кассы нельзя будет отправить данные для кассы на КС.\r\n                Удаленную кассу можно восстановить по cashboxId отдельным методом.\r\n                Касса не сможет забирать с сервера справочники и загружать документы"
@@ -1075,27 +817,15 @@
 									"formdata": []
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/restore",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/restore",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"restore"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -1112,17 +842,11 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/{{cashboxId}}/settings",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/settings",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
 										"{{cashboxId}}",
@@ -1151,28 +875,16 @@
 									"raw": "{ \"Settings\": {\r\n            \"address\": \"ул. Малопрудная г. Екатеринбург\",\r\n            \"inn\": \"825933082608\",\r\n            \"kpp\": \"\",\r\n            \"shopName\": \"Миша тестит\",\r\n            \"cashboxName\": \"24102022\",\r\n            \"synchronizationInterval\": \"00:05:00\",\r\n            \"moveRemainsToNextShift\": true,\r\n            \"weightBarcodePrefix\": \"28\",\r\n            \"prepaidEnabled\": false,\r\n            \"receiptSettings\": {\r\n                \"headerText\": [\r\n                    \"Добро\",\r\n                    \"пожаловатьf!\"\r\n                ],\r\n                \"footerText\": [\r\n                    \"Спасибо за\",\r\n                    \"покупку!\"\r\n                ]\r\n            },\r\n            \"roundSettings\": \"none\",\r\n            \"workerEnabled\": false,\r\n            \"customerEnabled\": false,\r\n            \"freeSaleSettings\": null,\r\n            \"egaisSettings\": {\r\n                \"alcoholSaleTimeSettings\": null\r\n            },\r\n            \"integratedTerminalEnabled\": null,\r\n            \"agentEnabled\": false,\r\n            \"tobaccoDatamatrixRequest\": null,\r\n            \"markingEnabled\": false,\r\n            \"printerEnabled\": true,\r\n            \"orderNumberPrefix\": null,\r\n            \"medicineSettings\": null,\r\n            \"markingCodeValidationSettings\": null,\r\n            \"alcoMarkValidationSettings\": null,\r\n            \"loyaltyToken\": \"222d7c0a-d3d4-4155-b7cb-819da22e1df9\",\r\n            \"customersSettings\": null,\r\n            \"fasterPaymentSystemSettings\": null,\r\n            \"productBalanceSettings\": null,\r\n            \"ytipsUrl\": null,\r\n            \"loyaltyQrPrintingEnabled\": false,\r\n            \"amountPrintSlip\": null\r\n        },\r\n        \"previousVersion\": 2\r\n}"
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/settings/backend",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/settings/backend",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"settings",
 										"backend"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Обновление настроек на КС с изменением версии"
@@ -1198,28 +910,16 @@
 									"raw": "Тело запроса"
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/settings/app",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/settings/app",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"settings",
 										"app"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Метод нужен для исключительных случаях (обращение в ТП), когда нужно вручную поменять настройки приложения"
@@ -1237,27 +937,15 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/serviceInfo",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/serviceInfo",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"serviceInfo"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Возвращает данные по кассе за все время"
@@ -1280,28 +968,16 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/cashier",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/cashier",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"cashier"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Метод для ручного тестирования, диагностики проблем на кассе"
@@ -1327,28 +1003,69 @@
 									"raw": "{\r\n  \"diff\": {\r\n    \"DeletedIds\": [],\r\n    \"Updated\": [\r\n      {\r\n            \"password\": null,\r\n            \"accessRights\": [\r\n\"RemoveLine\",\r\n\"CreateReceiptToReturn\",\r\n\"BrowseFinancialSummary\",\r\n\"BrowseReceipts\",\r\n\"ProductsStatistics\",\r\n\"PrintReports\",\r\n\"BrowseClosedShifts\",\r\n\"CorrectionReceipts\",\r\n\"PostponedReceipts\",\r\n\"InsertionsAndWithdrawals\",\r\n\"CashboxSettings\",\r\n\"EditingPriceAndDiscount\",\r\n\"AcceptanceOfCashPayments\",\r\n\"SaleOfTobacco\",\r\n\"SaleOfClothes\",\r\n\"SaleOfShoes\",\r\n\"SaleOfMilkProducts\",\r\n\"SaleOfWater\",\r\n\"SaleOfTires\",\r\n\"SaleOfPerfume\",\r\n\"SaleOfPhotoEquipment\",\r\n\"SaleOfMedicine\",\r\n\"AllowedClosingShift\"\r\n            ],\r\n            \"id\": \"c1cbd30a-3ccb-4a17-a8f0-b73935b49624\",\r\n            \"name\": \"Миша2\",\r\n            \"inn\": null,\r\n            \"role\": \"administrator\"\r\n      }\r\n    ]\r\n  },\r\n  \"previousVersion\": 1\r\n}\r\n\r\n\r\n"
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/cashier",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/cashier",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"cashier"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Создать кассира в один клик",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"prepareRequest = eval(pm.collectionVariables.get(\"prepare_request\")); \r",
+											"\r",
+											"pm.sendRequest(prepareRequest('catalog/cashier'), (error, response) => {\r",
+											"    if (error){\r",
+											"        console.log(error)\r",
+											"    }\r",
+											"    cashier_version = Number(response.json()[\"version\"]);\r",
+											"    pm.collectionVariables.set(\"cashier_version\", cashier_version);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"diff\": {\r\n    \"DeletedIds\": [],\r\n    \"Updated\": [\r\n      {\r\n            \"password\": null,\r\n            \"accessRights\": [\r\n\"RemoveLine\",\r\n\"CreateReceiptToReturn\",\r\n\"BrowseFinancialSummary\",\r\n\"BrowseReceipts\",\r\n\"ProductsStatistics\",\r\n\"PrintReports\",\r\n\"BrowseClosedShifts\",\r\n\"CorrectionReceipts\",\r\n\"PostponedReceipts\",\r\n\"InsertionsAndWithdrawals\",\r\n\"CashboxSettings\",\r\n\"EditingPriceAndDiscount\",\r\n\"AcceptanceOfCashPayments\",\r\n\"SaleOfTobacco\",\r\n\"SaleOfClothes\",\r\n\"SaleOfShoes\",\r\n\"SaleOfMilkProducts\",\r\n\"SaleOfWater\",\r\n\"SaleOfTires\",\r\n\"SaleOfPerfume\",\r\n\"SaleOfPhotoEquipment\",\r\n\"SaleOfMedicine\",\r\n\"AllowedClosingShift\"\r\n            ],\r\n            \"id\": \"c1cbd30a-3ccb-4a17-a8f0-b73935b49624\",\r\n            \"name\": \"Кассир со всеми правами (gen)\",\r\n            \"inn\": null,\r\n            \"role\": \"administrator\"\r\n      }\r\n    ]\r\n  },\r\n  \"previousVersion\": {{cashier_version}}\r\n}\r\n\r\n\r\n"
+								},
+								"url": {
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/cashier",
+									"host": [
+										"{{base_url}}"
 									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
+									"path": [
+										"v1",
+										"cashbox",
+										"{{cashboxId}}",
+										"catalog",
+										"cashier"
 									]
 								}
 							},
@@ -1365,30 +1082,18 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/cashier/version/used",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/cashier/version/used",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"cashier",
 										"version",
 										"used"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Метод для ручного тестирования, диагностики проблем на кассе"
@@ -1406,30 +1111,18 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/cashier/version/latest",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/cashier/version/latest",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"cashier",
 										"version",
 										"latest"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -1451,20 +1144,14 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/shift/:shiftId/correctionReceipt/:id",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/shift/:shiftId/correctionReceipt/:id",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"shift",
 										":shiftId",
 										"correctionReceipt",
@@ -1472,16 +1159,12 @@
 									],
 									"variable": [
 										{
-											"key": "id",
-											"value": "{{id}}"
-										},
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										},
-										{
 											"key": "shiftId",
 											"value": "{{shiftId}}"
+										},
+										{
+											"key": "id",
+											"value": "{{id}}"
 										}
 									]
 								}
@@ -1499,29 +1182,19 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/shift/:shiftId/correctionReceipt",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/shift/:shiftId/correctionReceipt",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"shift",
 										":shiftId",
 										"correctionReceipt"
 									],
 									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "2df9783e-6ff1-4efe-9ac8-f3cf9a0880b8"
-										},
 										{
 											"key": "shiftId",
 											"value": "ac095022-16c9-4859-9141-334f0e5dc9fb"
@@ -1547,28 +1220,16 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/discount",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/discount",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"discount"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Метод для ручного тестирования, диагностики проблем на кассе"
@@ -1594,28 +1255,16 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/discount",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/discount",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"discount"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -1632,30 +1281,18 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/discount/version/used",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/discount/version/used",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"discount",
 										"version",
 										"used"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Метод для ручного тестирования, диагностики проблем на кассе"
@@ -1673,30 +1310,18 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/discount/version/latest",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/discount/version/latest",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"discount",
 										"version",
 										"latest"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -1718,17 +1343,11 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/events/pointer",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/events/pointer",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"events",
 										"pointer"
@@ -1757,17 +1376,11 @@
 									"raw": "Указатель на ленте событий"
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/events?count={{count}}",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/events?count={{count}}",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"events"
 									],
@@ -1793,17 +1406,11 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/events?dateTime={{dateTime}}&count={{count}}",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/events?dateTime={{dateTime}}&count={{count}}",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"events"
 									],
@@ -1849,20 +1456,14 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/shift",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/shift",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"shift"
 									],
 									"query": [
@@ -1875,12 +1476,6 @@
 											"key": "to",
 											"value": "2021-07-08T11:54:29.3736144+00:00",
 											"disabled": true
-										}
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
 										}
 									]
 								}
@@ -1898,29 +1493,19 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/shift/:shiftId/receipt",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/shift/:shiftId/receipt",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"shift",
 										":shiftId",
 										"receipt"
 									],
 									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										},
 										{
 											"key": "shiftId",
 											"value": "{{shiftId}}"
@@ -1941,30 +1526,20 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/shift/:shiftId/moneyDocument/:id",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/shift/:shiftId/moneyDocument/:id",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"shift",
 										":shiftId",
 										"moneyDocument",
 										":id"
 									],
 									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										},
 										{
 											"key": "shiftId",
 											"value": "{{shiftId}}"
@@ -1989,30 +1564,20 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/shift/:shiftId/receipt/:id",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/shift/:shiftId/receipt/:id",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"shift",
 										":shiftId",
 										"receipt",
 										":id"
 									],
 									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										},
 										{
 											"key": "shiftId",
 											"value": "{{shiftId}}"
@@ -2037,28 +1602,18 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/shift/:shiftId",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/shift/:shiftId",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"shift",
 										":shiftId"
 									],
 									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										},
 										{
 											"key": "shiftId",
 											"value": "1"
@@ -2084,28 +1639,16 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/tile",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/tile",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"tile"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "9da5942d-7465-4728-b806-636e4fb63daa"
-										}
 									]
 								},
 								"description": "Метод для ручного тестирования, диагностики проблем на кассе"
@@ -2131,28 +1674,16 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/tile",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/tile",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"tile"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -2169,30 +1700,18 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/tile/version/used",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/tile/version/used",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"tile",
 										"version",
 										"used"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								},
 								"description": "Метод для ручного тестирования, диагностики проблем на кассе"
@@ -2210,73 +1729,18 @@
 									}
 								],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/catalog/tile/version/latest",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/catalog/tile/version/latest",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"catalog",
 										"tile",
 										"version",
 										"latest"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Отложенные чеки",
-					"item": [
-						{
-							"name": "Получить все отложенные чеки",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Accept",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/postponedReceipt",
-									"protocol": "https",
-									"host": [
-										"market",
-										"testkontur",
-										"ru"
-									],
-									"port": "443",
-									"path": [
-										"cashboxApi",
-										"backend",
-										"v1",
-										"cashbox",
-										":cashboxId",
-										"postponedReceipt"
-									],
-									"variable": [
-										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										}
 									]
 								}
 							},
@@ -2313,32 +1777,166 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/shift/:shiftId/receipt",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/shift/:shiftId/receipt",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"shift",
 										":shiftId",
 										"receipt"
 									],
 									"variable": [
 										{
+											"key": "shiftId",
+											"value": "3b12dded-e3ca-4f32-8068-67430ed14527"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Заказы",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/v2/orders?cashboxId={{cashboxId}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"v2",
+										"orders"
+									],
+									"query": [
+										{
 											"key": "cashboxId",
 											"value": "{{cashboxId}}"
-										},
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Заказы с визуализацией",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var template = ` \r",
+											"    <style type=\"text/css\">\r",
+											"        .tftable {font-size:14px;color:#333333;width:100%;\r",
+											"        border-width: 1px;border-color: #87ceeb;border-collapse: collapse;}\r",
+											"        .tftable th {font-size:18px;background-color:#87ceeb;border-width: 1px;\r",
+											"        padding: 8px;border-style: solid;border-color: #87ceeb;text-align:left;}\r",
+											"        .tftable tr {background-color:#ffffff;}\r",
+											"        .tftable td {font-size:14px;border-width: 1px;padding: 8px;\r",
+											"        border-style: solid;border-color: #87ceeb;}\r",
+											"        .tftable tr:hover {background-color:#e0ffff;}\r",
+											"    </style>\r",
+											"    <table class=\"tftable\" border=\"1\">\r",
+											"        <tr>\r",
+											"            <th> Тип чека </th>\r",
+											"            <th> Номер </th>\r",
+											"            <th> Дата </th>\r",
+											"            <th> Статус </th>\r",
+											"            <th> Сумма чека </th>\r",
+											"\t\t\t<th> Позиции </th>\r",
+											"        </tr>\r",
+											"{{#each response}}\r",
+											"            <tr>\r",
+											"                <td>{{direction}}</td>\r",
+											"                <td>{{number}}</td>\r",
+											"                <td>{{endDateTime}}</td>\r",
+											"                <td>{{status}}</td>\r",
+											"\t\t\t\t<td>{{totalSum}}</td>\r",
+											"                <td>\r",
+											"                <table class=\"tftable\" border=\"1\">\r",
+											"                <tr>\r",
+											"                <th> Цена позиции </th>\r",
+											"                <th> Цена штуки </th>\r",
+											"                <th> Количество </th>\r",
+											"                <th> Название</th>\r",
+											"                <th> Тип </th>\r",
+											"                <th> Марка </th>\r",
+											"                \r",
+											"                </tr>\r",
+											"                {{#each positions}}\r",
+											"                <tr>\r",
+											"                <td>{{totalSum}}</td>\r",
+											"                <td>{{finalPricePerUnit}}</td>\r",
+											"                <td>{{quantity}}</td>\r",
+											"                <td>{{product.name}}</td>\r",
+											"                <td>{{product.type}}</td>\r",
+											"                <td>{{itemCode}}</td>                \r",
+											"                </tr>\r",
+											"                {{/each}}\r",
+											"                </table>\r",
+											"                </td>\r",
+											"            </tr>\r",
+											"            \r",
+											"           {{/each}}\r",
+											"    </table>`;\r",
+											"\t\r",
+											"pm.visualizer.set(template, {response: pm.response.json()});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/v2/orders?cashboxId={{cashboxId}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"v2",
+										"orders"
+									],
+									"query": [
 										{
-											"key": "shiftId",
-											"value": "{{shiftId}}"
+											"key": "cashboxId",
+											"value": "{{cashboxId}}"
 										}
 									]
 								}
@@ -2452,17 +2050,11 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/{{cashboxId}}/shift/{{shiftId}}/receipt",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/shift/{{shiftId}}/receipt",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
 										"{{cashboxId}}",
@@ -2491,33 +2083,49 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/:cashboxId/shift/:shiftId/correctionReceipt",
-									"protocol": "https",
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/shift/:shiftId/correctionReceipt",
 									"host": [
-										"market",
-										"testkontur",
-										"ru"
+										"{{base_url}}"
 									],
-									"port": "443",
 									"path": [
-										"cashboxApi",
-										"backend",
 										"v1",
 										"cashbox",
-										":cashboxId",
+										"{{cashboxId}}",
 										"shift",
 										":shiftId",
 										"correctionReceipt"
 									],
 									"variable": [
 										{
-											"key": "cashboxId",
-											"value": "{{cashboxId}}"
-										},
-										{
 											"key": "shiftId",
 											"value": "{{shiftId}}"
 										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Отложенные чеки",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/v1/cashbox/{{cashboxId}}/postponedReceipt",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"v1",
+										"cashbox",
+										"{{cashboxId}}",
+										"postponedReceipt"
 									]
 								}
 							},
@@ -2921,23 +2529,25 @@
 					"name": "Контур Установочник",
 					"item": [
 						{
-							"name": "New Request",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": ""
-								}
-							},
-							"response": []
-						},
-						{
 							"name": "Получение списка всех приложений на сервере",
 							"request": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": ""
+									"raw": "https://market.testkontur.ru/cashboxApi/updater/v1/applications/ru.kontur.cashbox.staging",
+									"protocol": "https",
+									"host": [
+										"market",
+										"testkontur",
+										"ru"
+									],
+									"path": [
+										"cashboxApi",
+										"updater",
+										"v1",
+										"applications",
+										"ru.kontur.cashbox.staging"
+									]
 								}
 							},
 							"response": []
@@ -3030,15 +2640,38 @@
 					]
 				},
 				{
-					"name": "Сотрудники",
+					"name": "Стор на тачках",
 					"item": [
 						{
-							"name": "New Request",
+							"name": "Создать кассу с доставкой",
 							"request": {
-								"method": "GET",
-								"header": [],
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"ytipsUrl\": null,\r\n    \"loyaltyQrPrintingEnabled\": false,\r\n    \"deliveryCashboxes\": [\r\n        \"056f3819-ac15-467a-a7c9-d22c70440e2e\"\r\n    ]\r\n}"
+								},
 								"url": {
-									"raw": ""
+									"raw": "{{server}}/store/v1/shops/{{shop}}/commonSettings",
+									"host": [
+										"{{server}}"
+									],
+									"path": [
+										"store",
+										"v1",
+										"shops",
+										"{{shop}}",
+										"commonSettings"
+									]
 								}
 							},
 							"response": []
@@ -3106,13 +2739,27 @@
 			"type": "string"
 		},
 		{
-			"key": "uri",
-			"value": "https://market.testkontur.ru:443/cashboxApi/backend/",
+			"key": "base_url",
+			"value": "https://market.testkontur.ru:443/cashboxApi/backend",
 			"type": "string"
 		},
 		{
 			"key": "prepare_request",
-			"value": "(url_tail) => {\n    var cashboxId = pm.collectionVariables.get(\"cashboxId\")\n    var shift_url = 'https://market.testkontur.ru:443/cashboxApi/backend/v1/cashbox/' + cashboxId + '/' + url_tail\n    const getRequest = {\n        url: shift_url,\n        method: 'GET',\n        header: {\n            'Content-Type': 'application/json',\n            'Authorization': 'Basic ' + btoa(pm.collectionVariables.get(\"username\") + ':' + pm.collectionVariables.get(\"password\"))\n        },\n    };\n    return getRequest\n}",
+			"value": "(url_tail) => {\n    var cashboxId = pm.collectionVariables.get(\"cashboxId\");\n    var base_url = pm.collectionVariables.get(\"base_url\");\n    var version = pm.request.url.variables.get('version')\n    if (version == null) {\n        version = 'v1'\n    }\n    var request_url = base_url + '/' + version + '/cashbox/' + cashboxId + '/' + url_tail;\n    const getRequest = {\n        url: request_url,\n        method: 'GET',\n        header: {\n            'Content-Type': 'application/json',\n            'Authorization': 'Basic ' + btoa(pm.collectionVariables.get(\"username\") + ':' + pm.collectionVariables.get(\"password\"))\n        },\n    };\n    return getRequest;\n}",
+			"type": "string"
+		},
+		{
+			"key": "cashier_version",
+			"value": ""
+		},
+		{
+			"key": "server",
+			"value": "http://xlt-hst-dev04.dev.kontur.ru:20170",
+			"type": "string"
+		},
+		{
+			"key": "shop",
+			"value": "55a55bd4-7169-4065-91e3-2f3ae3ce588e",
 			"type": "string"
 		}
 	]
